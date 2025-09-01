@@ -132,21 +132,90 @@ stages:
             displayName: 'Publish Smoke Test Results'
             continueOnError: true
 
-          - task: PublishHtmlReport@1
-            condition: and(succeededOrFailed(), or(contains(variables['Agent.JobStatus'], 'Succeeded'), contains(variables['Agent.JobStatus'], 'SucceededWithIssues')))
-            inputs:
-              reportDir: 'results'
-              tabName: 'Smoke Test Reports'
-            displayName: 'Publish Smoke Test HTML Reports'
+          # Enhanced HTML Report Publishing - Multiple Methods
+          - script: |
+              echo "🔧 Preparing HTML reports for publishing..."
+              
+              # Check if HTML files exist
+              if [ -f "results/smoke-test-report.html" ]; then
+                echo "✅ Found smoke test HTML report"
+                
+                # Method 1: Copy to a known location for publishing
+                mkdir -p "$(Agent.TempDirectory)/html-reports"
+                cp results/*.html "$(Agent.TempDirectory)/html-reports/" 2>/dev/null || true
+                
+                # Method 2: Create an index.html if multiple reports exist
+                if [ $(find results/ -name "*.html" | wc -l) -gt 1 ]; then
+                  echo "📋 Creating index.html for multiple reports..."
+                  cat > "$(Agent.TempDirectory)/html-reports/index.html" << 'INDEXEOF'
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <title>MCP Test Reports</title>
+                  <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    .header { background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+                    .report-link { display: block; padding: 10px; margin: 5px 0; background: #f9f9f9; border-radius: 3px; text-decoration: none; color: #333; }
+                    .report-link:hover { background: #e9e9e9; }
+                  </style>
+                </head>
+                <body>
+                  <div class="header">
+                    <h1>🚀 MCP Automation Framework - Test Reports</h1>
+                    <p>Generated reports from automated test execution</p>
+                  </div>
+                  <div>
+                    <h2>Available Reports:</h2>
+                INDEXEOF
+                  
+                  # Add links to all HTML files
+                  for htmlfile in results/*.html; do
+                    if [ -f "$htmlfile" ]; then
+                      filename=$(basename "$htmlfile")
+                      echo "    <a href=\"./$filename\" class=\"report-link\">📊 $filename</a>" >> "$(Agent.TempDirectory)/html-reports/index.html"
+                    fi
+                  done
+                  
+                  echo "  </div></body></html>" >> "$(Agent.TempDirectory)/html-reports/index.html"
+                fi
+                
+                echo "📁 Reports prepared in: $(Agent.TempDirectory)/html-reports"
+                ls -la "$(Agent.TempDirectory)/html-reports"
+              else
+                echo "⚠️ No HTML reports found to publish"
+              fi
+            displayName: 'Prepare HTML Reports for Publishing'
+            condition: succeededOrFailed()
             continueOnError: true
 
+          # Method 1: Publish as build artifacts (always works)
           - task: PublishBuildArtifacts@1
             condition: succeededOrFailed()
             inputs:
               pathtoPublish: 'results'
-              artifactName: 'smoke-test-reports'
+              artifactName: 'smoke-test-html-reports'
               publishLocation: 'Container'
-            displayName: 'Publish Smoke Test MCP Reports'
+            displayName: 'Publish Smoke Test HTML Reports as Artifacts'
+            continueOnError: true
+
+          # Method 2: Try to publish with the HTML Report extension if available
+          - task: PublishHtmlReport@1
+            condition: and(succeededOrFailed(), exists('results/smoke-test-report.html'))
+            inputs:
+              htmlType: 'directoryPath'
+              htmlDirectory: '$(Agent.TempDirectory)/html-reports'
+              tabName: 'Smoke Test Reports'
+            displayName: 'Publish HTML Reports to Tabs'
+            continueOnError: true
+
+          # Original artifacts publishing for MCP reports (includes logs and other files)
+          - task: PublishBuildArtifacts@1
+            condition: succeededOrFailed()
+            inputs:
+              pathtoPublish: 'results'
+              artifactName: 'smoke-test-mcp-logs'
+              publishLocation: 'Container'
+            displayName: 'Publish Smoke Test MCP Logs and Reports'
             continueOnError: true
 
   - stage: FullRegression
@@ -261,21 +330,90 @@ stages:
             displayName: 'Publish Regression Test Results'
             continueOnError: true
 
-          - task: PublishHtmlReport@1
-            condition: and(succeededOrFailed(), or(contains(variables['Agent.JobStatus'], 'Succeeded'), contains(variables['Agent.JobStatus'], 'SucceededWithIssues')))
-            inputs:
-              reportDir: 'results'
-              tabName: 'Regression Test Reports'
-            displayName: 'Publish Regression HTML Reports'
+          # Enhanced HTML Report Publishing - Multiple Methods
+          - script: |
+              echo "🔧 Preparing regression HTML reports for publishing..."
+              
+              # Check if HTML files exist
+              if [ -f "results/regression-test-report.html" ]; then
+                echo "✅ Found regression test HTML report"
+                
+                # Method 1: Copy to a known location for publishing
+                mkdir -p "$(Agent.TempDirectory)/regression-html-reports"
+                cp results/*.html "$(Agent.TempDirectory)/regression-html-reports/" 2>/dev/null || true
+                
+                # Method 2: Create an index.html if multiple reports exist
+                if [ $(find results/ -name "*.html" | wc -l) -gt 1 ]; then
+                  echo "📋 Creating index.html for multiple regression reports..."
+                  cat > "$(Agent.TempDirectory)/regression-html-reports/index.html" << 'INDEXEOF'
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <title>MCP Regression Test Reports</title>
+                  <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    .header { background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+                    .report-link { display: block; padding: 10px; margin: 5px 0; background: #f9f9f9; border-radius: 3px; text-decoration: none; color: #333; }
+                    .report-link:hover { background: #e9e9e9; }
+                  </style>
+                </head>
+                <body>
+                  <div class="header">
+                    <h1>🔄 MCP Automation Framework - Regression Test Reports</h1>
+                    <p>Generated reports from regression test execution</p>
+                  </div>
+                  <div>
+                    <h2>Available Reports:</h2>
+                INDEXEOF
+                  
+                  # Add links to all HTML files
+                  for htmlfile in results/*.html; do
+                    if [ -f "$htmlfile" ]; then
+                      filename=$(basename "$htmlfile")
+                      echo "    <a href=\"./$filename\" class=\"report-link\">📊 $filename</a>" >> "$(Agent.TempDirectory)/regression-html-reports/index.html"
+                    fi
+                  done
+                  
+                  echo "  </div></body></html>" >> "$(Agent.TempDirectory)/regression-html-reports/index.html"
+                fi
+                
+                echo "📁 Regression reports prepared in: $(Agent.TempDirectory)/regression-html-reports"
+                ls -la "$(Agent.TempDirectory)/regression-html-reports"
+              else
+                echo "⚠️ No regression HTML reports found to publish"
+              fi
+            displayName: 'Prepare Regression HTML Reports for Publishing'
+            condition: succeededOrFailed()
             continueOnError: true
 
+          # Method 1: Publish as build artifacts (always works)
           - task: PublishBuildArtifacts@1
             condition: succeededOrFailed()
             inputs:
               pathtoPublish: 'results'
-              artifactName: 'regression-test-reports'
+              artifactName: 'regression-test-html-reports'
               publishLocation: 'Container'
-            displayName: 'Publish Regression Test MCP Reports'
+            displayName: 'Publish Regression HTML Reports as Artifacts'
+            continueOnError: true
+
+          # Method 2: Try to publish with the HTML Report extension if available
+          - task: PublishHtmlReport@1
+            condition: and(succeededOrFailed(), exists('results/regression-test-report.html'))
+            inputs:
+              htmlType: 'directoryPath'
+              htmlDirectory: '$(Agent.TempDirectory)/regression-html-reports'
+              tabName: 'Regression Test Reports'
+            displayName: 'Publish Regression HTML Reports to Tabs'
+            continueOnError: true
+
+          # Original artifacts publishing for MCP reports (includes logs and other files)
+          - task: PublishBuildArtifacts@1
+            condition: succeededOrFailed()
+            inputs:
+              pathtoPublish: 'results'
+              artifactName: 'regression-test-mcp-logs'
+              publishLocation: 'Container'
+            displayName: 'Publish Regression Test MCP Logs and Reports'
             continueOnError: true
 
   - stage: Quality_Gates
