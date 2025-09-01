@@ -1,0 +1,17 @@
+Generate a Playwright test in TypeScript that:
+1. Opens https://opensource-demo.orangehrmlive.com
+2. Logs in with username "Admin" and password "admin123"
+3. Clicks on Time menu, then clicks on Timesheets submenu, then clicks on My Timesheets
+4. Creates a new timesheet entry with the following:
+   - Select current week time period
+   - Add Monday entry: Project "Internal - Human Resources", Activity "Planning", Time "8.00"
+   - Add Tuesday entry: Project "Internal - Human Resources", Activity "Development", Time "7.50" 
+   - Add Wednesday entry: Project "Internal - Human Resources", Activity "Testing", Time "8.00"
+   - Verify total hours shows "23.50"
+5. Saves the timesheet and verifies "Successfully Saved" message
+6. Submits the timesheet for approval and verifies status changes to "Submitted"
+7. Clicks on Employee Timesheets menu option to verify the submitted timesheet appears in the list
+8. Takes a screenshot of the final timesheet status
+9. Logs out and closes the browser
+
+Tags: regression, timesheet, employee, P2
