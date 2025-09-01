@@ -81,6 +81,14 @@ stages:
             displayName: 'Publish Smoke Test Results'
             continueOnError: true
 
+          - task: PublishHtmlReport@1
+            condition: succeededOrFailed()
+            inputs:
+              reportDir: 'results'
+              tabName: 'Smoke Test Reports'
+            displayName: 'Publish Smoke Test HTML Reports'
+            continueOnError: true
+
           - task: PublishBuildArtifacts@1
             condition: succeededOrFailed()
             inputs:
@@ -149,6 +157,14 @@ stages:
               failTaskOnFailedTests: true
               testRunTitle: 'Full Regression Tests'
             displayName: 'Publish Regression Test Results'
+            continueOnError: true
+
+          - task: PublishHtmlReport@1
+            condition: succeededOrFailed()
+            inputs:
+              reportDir: 'results'
+              tabName: 'Regression Test Reports'
+            displayName: 'Publish Regression HTML Reports'
             continueOnError: true
 
           - task: PublishBuildArtifacts@1
