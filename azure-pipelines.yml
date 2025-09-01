@@ -37,14 +37,6 @@ stages:
               versionSpec: '$(nodeVersion)'
             displayName: 'Install Node.js'
 
-          - task: Cache@2
-            inputs:
-              key: 'npm | "$(Agent.OS)" | package-lock.json'
-              restoreKeys: |
-                npm | "$(Agent.OS)"
-              path: $(npm_config_cache)
-            displayName: 'Cache npm packages'
-
           - script: |
               npm ci
               npx playwright install --with-deps
