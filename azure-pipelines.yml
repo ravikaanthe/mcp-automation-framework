@@ -6,14 +6,8 @@ trigger:
     include:
       - main
       - develop
-            - task: PublishTestResults@2
-            condition: succeededOrFailed()
-            inputs:
-              testResultsFormat: 'JUnit'
-              testResultsFiles: 'test-results/results.xml'
-              failTaskOnFailedTests: true
-              testRunTitle: 'Full Regression Suite'
-            displayName: 'Publish Full Regression Results'    exclude:
+  paths:
+    exclude:
       - docs/*
       - README.md
       - LICENSE
@@ -178,7 +172,7 @@ stages:
             condition: succeededOrFailed()
             inputs:
               testResultsFormat: 'JUnit'
-              testResultsFiles: 'results/junit-results.xml'
+              testResultsFiles: 'test-results/results.xml'
               failTaskOnFailedTests: true
               testRunTitle: 'Full Regression Suite'
             displayName: 'Publish Full Regression Results'
