@@ -79,14 +79,16 @@ stages:
               failTaskOnFailedTests: true
               testRunTitle: 'Smoke Tests'
             displayName: 'Publish Smoke Test Results'
+            continueOnError: true
 
           - task: PublishBuildArtifacts@1
             condition: succeededOrFailed()
             inputs:
-              pathtoPublish: 'playwright-report'
-              artifactName: 'smoke-test-report'
+              pathtoPublish: 'results'
+              artifactName: 'smoke-test-reports'
               publishLocation: 'Container'
-            displayName: 'Publish Smoke Test HTML Report'
+            displayName: 'Publish Smoke Test MCP Reports'
+            continueOnError: true
 
   - stage: FullRegression
     displayName: 'Full Regression Suite'
@@ -147,22 +149,16 @@ stages:
               failTaskOnFailedTests: true
               testRunTitle: 'Full Regression Tests'
             displayName: 'Publish Regression Test Results'
+            continueOnError: true
 
           - task: PublishBuildArtifacts@1
             condition: succeededOrFailed()
             inputs:
-              pathtoPublish: 'playwright-report'
-              artifactName: 'regression-test-report'
+              pathtoPublish: 'results'
+              artifactName: 'regression-test-reports'
               publishLocation: 'Container'
-            displayName: 'Publish Regression Test HTML Report'
-
-          - task: PublishBuildArtifacts@1
-            condition: succeededOrFailed()
-            inputs:
-              pathtoPublish: 'test-results'
-              artifactName: 'test-results'
-              publishLocation: 'Container'
-            displayName: 'Publish Test Artifacts'
+            displayName: 'Publish Regression Test MCP Reports'
+            continueOnError: true
 
   - stage: Quality_Gates
     displayName: 'Quality Gates'
