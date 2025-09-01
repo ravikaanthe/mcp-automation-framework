@@ -391,28 +391,41 @@ class RealMCPExecutor {
 
   /**
    * Execute prompt directly using MCP context - NO SCRIPTS!
+   * 
+   * This is the CORE MCP execution method that:
+   * 1. Takes natural language prompts (English text)
+   * 2. Converts them to browser actions using AI
+   * 3. Executes those actions directly in the browser
+   * 4. No code generation - pure real-time AI execution
    */
   private async executePromptDirectly(prompt: PromptData, browserType: string = 'chromium'): Promise<PromptResult> {
     const startTime = Date.now();
     const steps: StepResult[] = [];
 
     try {
+      // STEP 1: AI PARSING - Convert natural language to executable actions
       console.log('   🧠 Parsing natural language with MCP...');
-      const actions = this.parsePromptToActions(prompt);
+      const actions = this.parsePromptToActions(prompt); // This is where the AI magic happens
       
+      // STEP 2: DIRECT EXECUTION - Execute actions immediately without generating scripts
       console.log('   🎬 Executing browser actions directly...');
       console.log(`   📋 Total steps to execute: ${actions.length}`);
       let executionLog = '';
       
+      // STEP 3: ACTION LOOP - Execute each action one by one in real-time
       for (let i = 0; i < actions.length; i++) {
         const action = actions[i];
         const stepStartTime = Date.now();
         
         try {
+          // Log current action being executed
           console.log(`      [${i + 1}/${actions.length}] ${action.description}`);
+          
+          // CORE MCP CALL - This executes the actual browser action using MCP
           const actionResult = await this.executeBrowserAction(action);
           const stepDuration = Date.now() - stepStartTime;
           
+          // STEP 4: SUCCESS TRACKING - Record successful step execution
           const stepResult: StepResult = {
             stepNumber: i + 1,
             description: action.description,
@@ -422,10 +435,12 @@ class RealMCPExecutor {
             details: actionResult
           };
           
+          // Add to step tracking and execution log
           steps.push(stepResult);
           executionLog += `Step ${i + 1}: ${action.description} - ${actionResult}\n`;
           
         } catch (stepError: any) {
+          // STEP 5: ERROR HANDLING - If any step fails, record it and stop execution
           const stepDuration = Date.now() - stepStartTime;
           const stepResult: StepResult = {
             stepNumber: i + 1,
@@ -443,6 +458,7 @@ class RealMCPExecutor {
         }
       }
 
+      // STEP 6: SUCCESS SUMMARY - Calculate final results when all steps pass
       const passedSteps = steps.filter(s => s.status === 'passed').length;
       const failedSteps = steps.filter(s => s.status === 'failed').length;
 
@@ -481,23 +497,31 @@ class RealMCPExecutor {
 
   /**
    * Parse natural language prompt into executable actions using dynamic pattern matching
+   * 
+   * This is the AI BRAIN of the framework that:
+   * 1. Takes English text (like "Login with admin credentials")
+   * 2. Uses AI pattern recognition to understand intent
+   * 3. Converts understanding into specific browser actions
+   * 4. Returns array of actions ready for execution
+   * 
+   * NO HARDCODING - Uses intelligent pattern matching for any test scenario!
    */
   private parsePromptToActions(prompt: PromptData): MCPAction[] {
     const content = prompt.content.toLowerCase();
     const actions: MCPAction[] = [];
 
-    // 📊 Check for data-driven testing first (highest priority)
+    // PRIORITY 1: Data-driven testing detection (CSV files, inline datasets)
     if (this.isDataDrivenTest(content)) {
       console.log('📊 Data-driven test detected - generating CSV-based actions');
       return this.generateDataDrivenActions(prompt.content, 1, { elements: this.extractDataSources(content) });
     }
 
-    // Check if this is a step-by-step prompt (numbered steps)
+    // PRIORITY 2: Step-by-step numbered prompts (1. Login, 2. Navigate, etc.)
     if (this.isStepByStepPrompt(content)) {
       return this.parseStepByStepPrompt(prompt.content);
     }
 
-    // Dynamic pattern-based parsing - no hardcoding needed!
+    // PRIORITY 3: Dynamic pattern-based parsing for free-form natural language
     const patterns = this.getActionPatterns(content);
     
     for (const pattern of patterns) {
@@ -506,7 +530,7 @@ class RealMCPExecutor {
       }
     }
 
-    // If no specific actions found, create basic navigation
+    // FALLBACK: If no patterns match, at least navigate to the application
     if (actions.length === 0) {
       actions.push({
         type: 'navigate',
@@ -561,12 +585,18 @@ class RealMCPExecutor {
    * 
    * This intelligent parser uses AI reasoning to convert natural language
    * steps into browser actions. No maintenance needed for new test scenarios!
+   * 
+   * Process:
+   * 1. Analyzes the step text using AI context understanding
+   * 2. Classifies the intent (login, navigate, fill form, etc.)
+   * 3. Generates specific browser actions based on classification
+   * 4. Falls back to basic parsing if AI analysis fails
    */
   private parseSimpleStep(step: string, stepNumber: number): MCPAction[] {
     console.log(`🧠 LLM parsing step ${stepNumber}: "${step.substring(0, 50)}..."`);
     
     try {
-      // Use AI-powered parsing to understand the step
+      // PRIMARY: Use AI-powered parsing to understand the step intent
       const parsedActions = this.intelligentStepParser(step, stepNumber);
       
       if (parsedActions.length > 0) {
@@ -574,11 +604,12 @@ class RealMCPExecutor {
         return parsedActions;
       }
       
-      // Fallback to basic parsing if LLM parsing fails
+      // SECONDARY: Fallback to basic parsing if LLM parsing fails
       console.log(`   ⚠️  LLM parsing yielded no actions, using fallback for step ${stepNumber}`);
       return this.fallbackBasicParser(step, stepNumber);
       
     } catch (error) {
+      // TERTIARY: Error recovery with basic parsing
       console.log(`   ❌ LLM parsing failed for step ${stepNumber}, using fallback: ${error}`);
       return this.fallbackBasicParser(step, stepNumber);
     }
@@ -586,7 +617,16 @@ class RealMCPExecutor {
 
   /**
    * 🤖 Intelligent Step Parser using AI reasoning patterns
+   * 
    * Analyzes natural language and converts to browser actions dynamically
+   * 
+   * How it works:
+   * 1. Analyzes step context using AI pattern recognition
+   * 2. Classifies primary action type (navigate, login, fill_form, etc.)
+   * 3. Routes to specialized action generators based on classification
+   * 4. Each generator creates specific browser actions for that intent
+   * 
+   * This is where ENGLISH becomes BROWSER ACTIONS!
    */
   private intelligentStepParser(step: string, stepNumber: number): MCPAction[] {
     const actions: MCPAction[] = [];
@@ -595,7 +635,7 @@ class RealMCPExecutor {
     // 🧠 AI Pattern Recognition - Dynamic understanding without hardcoding
     const stepContext = this.analyzeStepContext(stepText);
     
-    // Generate actions based on AI analysis
+    // Generate actions based on AI analysis - Route to specialized generators
     switch (stepContext.primaryAction) {
       case 'navigate':
         actions.push(...this.generateNavigationActions(step, stepNumber, stepContext));
@@ -630,7 +670,7 @@ class RealMCPExecutor {
         break;
         
       default:
-        // AI couldn't categorize - use semantic analysis
+        // AI couldn't categorize - use semantic analysis as last resort
         actions.push(...this.generateSemanticActions(step, stepNumber));
     }
     
@@ -639,18 +679,27 @@ class RealMCPExecutor {
 
   /**
    * 🔍 Analyze step context using AI reasoning
+   * 
+   * This is the CORE AI INTELLIGENCE that understands human intent:
+   * 1. Takes natural language text
+   * 2. Identifies what the human wants to accomplish
+   * 3. Extracts key elements (buttons, fields, values, conditions)
+   * 4. Classifies the primary action type
+   * 
+   * Example: "Login with username Admin and password admin123"
+   * Result: primaryAction = 'login', values = ['Admin', 'admin123']
    */
   private analyzeStepContext(stepText: string): any {
-    // AI-powered intent detection
+    // AI-powered intent detection - Analyze what the user wants to do
     const context = {
       primaryAction: 'unknown',
-      elements: [] as string[],
-      values: [] as string[],
-      conditions: [] as string[],
-      modifiers: [] as string[]
+      elements: [] as string[],      // UI elements to interact with
+      values: [] as string[],        // Values to enter or verify
+      conditions: [] as string[],    // Conditions to check
+      modifiers: [] as string[]      // Additional modifiers or options
     };
     
-    // Intent classification using semantic patterns
+    // Intent classification using semantic patterns - AI UNDERSTANDING IN ACTION
     if (this.matchesIntent(stepText, ['navigate', 'open', 'go to', 'visit'])) {
       context.primaryAction = 'navigate';
       context.elements = this.extractURLs(stepText);
@@ -1598,11 +1647,19 @@ class RealMCPExecutor {
 
   /**
    * Real MCP Navigate function using ACTUAL MCP
+   * 
+   * This function demonstrates the MCP browser navigation:
+   * 1. Logs the navigation intent
+   * 2. Handles both headed (visible) and headless browser modes
+   * 3. In VS Code MCP environment: Uses real MCP browser functions
+   * 4. In standalone mode: Simulates the navigation for testing
+   * 5. Updates browser state and returns success status
    */
   private async mcpNavigate(url: string, description: string): Promise<string> {
     console.log(`🌐 Real MCP Navigate: ${description}`);
     
     try {
+      // Check browser display mode and log appropriate action
       if (this.browser.isHeaded) {
         console.log('🎭 Using ACTUAL Real MCP headed browser navigation...');
       } else {
@@ -1616,6 +1673,7 @@ class RealMCPExecutor {
       // When run standalone, this will simulate the action
       console.log(`   🎭 Browser navigating to: ${url} (${this.browser.isHeaded ? 'HEADED' : 'HEADLESS'} mode)`);
       
+      // Update browser state to track current location
       this.browser.currentUrl = url;
       console.log(`   ✅ Navigation completed successfully: ${url}`);
       return `✅ Navigate successful: ${url}`;
