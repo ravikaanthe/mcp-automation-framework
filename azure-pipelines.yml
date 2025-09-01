@@ -198,14 +198,45 @@ stages:
             displayName: 'Publish Smoke Test HTML Reports as Artifacts'
             continueOnError: true
 
-          # Method 2: Try to publish with the HTML Report extension if available
-          - task: PublishHtmlReport@1
-            condition: and(succeededOrFailed(), exists('results/smoke-test-report.html'))
+          # Alternative: Upload HTML reports for easy access and viewing
+          - script: |
+              echo "📤 Uploading HTML reports for easy access..."
+              
+              # Create a summary page for better navigation
+              if [ -d "$(Agent.TempDirectory)/html-reports" ]; then
+                echo "✅ HTML reports directory exists"
+                ls -la "$(Agent.TempDirectory)/html-reports"
+                
+                # Create summary file for pipeline
+                echo "## 📊 Smoke Test HTML Reports" > "$(Agent.TempDirectory)/html-reports/SUMMARY.md"
+                echo "" >> "$(Agent.TempDirectory)/html-reports/SUMMARY.md"
+                echo "Generated HTML reports from MCP smoke test execution:" >> "$(Agent.TempDirectory)/html-reports/SUMMARY.md"
+                echo "" >> "$(Agent.TempDirectory)/html-reports/SUMMARY.md"
+                
+                for htmlfile in "$(Agent.TempDirectory)/html-reports"/*.html; do
+                  if [ -f "$htmlfile" ]; then
+                    filename=$(basename "$htmlfile")
+                    echo "- [$filename](./$filename)" >> "$(Agent.TempDirectory)/html-reports/SUMMARY.md"
+                  fi
+                done
+                
+                echo "" >> "$(Agent.TempDirectory)/html-reports/SUMMARY.md"
+                echo "_Download the artifacts to view HTML reports in your browser._" >> "$(Agent.TempDirectory)/html-reports/SUMMARY.md"
+              else
+                echo "⚠️ No HTML reports directory found"
+              fi
+            displayName: 'Prepare HTML Reports Summary'
+            condition: succeededOrFailed()
+            continueOnError: true
+
+          # Upload HTML reports as artifacts - This always works reliably
+          - task: PublishBuildArtifacts@1
+            condition: succeededOrFailed()
             inputs:
-              htmlType: 'directoryPath'
-              htmlDirectory: '$(Agent.TempDirectory)/html-reports'
-              tabName: 'Smoke Test Reports'
-            displayName: 'Publish HTML Reports to Tabs'
+              pathtoPublish: '$(Agent.TempDirectory)/html-reports'
+              artifactName: 'smoke-test-viewable-html-reports'
+              publishLocation: 'Container'
+            displayName: 'Upload Smoke Test HTML Reports for Viewing'
             continueOnError: true
 
           # Original artifacts publishing for MCP reports (includes logs and other files)
@@ -396,14 +427,45 @@ stages:
             displayName: 'Publish Regression HTML Reports as Artifacts'
             continueOnError: true
 
-          # Method 2: Try to publish with the HTML Report extension if available
-          - task: PublishHtmlReport@1
-            condition: and(succeededOrFailed(), exists('results/regression-test-report.html'))
+          # Alternative: Upload HTML reports for easy access and viewing
+          - script: |
+              echo "📤 Uploading regression HTML reports for easy access..."
+              
+              # Create a summary page for better navigation
+              if [ -d "$(Agent.TempDirectory)/regression-html-reports" ]; then
+                echo "✅ Regression HTML reports directory exists"
+                ls -la "$(Agent.TempDirectory)/regression-html-reports"
+                
+                # Create summary file for pipeline
+                echo "## 📊 Regression Test HTML Reports" > "$(Agent.TempDirectory)/regression-html-reports/SUMMARY.md"
+                echo "" >> "$(Agent.TempDirectory)/regression-html-reports/SUMMARY.md"
+                echo "Generated HTML reports from MCP regression test execution:" >> "$(Agent.TempDirectory)/regression-html-reports/SUMMARY.md"
+                echo "" >> "$(Agent.TempDirectory)/regression-html-reports/SUMMARY.md"
+                
+                for htmlfile in "$(Agent.TempDirectory)/regression-html-reports"/*.html; do
+                  if [ -f "$htmlfile" ]; then
+                    filename=$(basename "$htmlfile")
+                    echo "- [$filename](./$filename)" >> "$(Agent.TempDirectory)/regression-html-reports/SUMMARY.md"
+                  fi
+                done
+                
+                echo "" >> "$(Agent.TempDirectory)/regression-html-reports/SUMMARY.md"
+                echo "_Download the artifacts to view HTML reports in your browser._" >> "$(Agent.TempDirectory)/regression-html-reports/SUMMARY.md"
+              else
+                echo "⚠️ No regression HTML reports directory found"
+              fi
+            displayName: 'Prepare Regression HTML Reports Summary'
+            condition: succeededOrFailed()
+            continueOnError: true
+
+          # Upload HTML reports as artifacts - This always works reliably
+          - task: PublishBuildArtifacts@1
+            condition: succeededOrFailed()
             inputs:
-              htmlType: 'directoryPath'
-              htmlDirectory: '$(Agent.TempDirectory)/regression-html-reports'
-              tabName: 'Regression Test Reports'
-            displayName: 'Publish Regression HTML Reports to Tabs'
+              pathtoPublish: '$(Agent.TempDirectory)/regression-html-reports'
+              artifactName: 'regression-test-viewable-html-reports'
+              publishLocation: 'Container'
+            displayName: 'Upload Regression HTML Reports for Viewing'
             continueOnError: true
 
           # Original artifacts publishing for MCP reports (includes logs and other files)
