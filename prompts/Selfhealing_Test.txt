@@ -10,3 +10,5 @@ Generate a Playwright test in TypeScript that:
 4. Verifies the dashboard loads
 5. Click on 'User' icon and select Logs out.
 Ensure the script adapts if locators change.
+
+Tags: regression

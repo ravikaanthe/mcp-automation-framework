@@ -16,3 +16,5 @@
 8. Click "user" icon
 9. Click "Logout"
 10. Close the browser
+
+Tags: regression

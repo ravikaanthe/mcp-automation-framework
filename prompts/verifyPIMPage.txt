@@ -9,4 +9,4 @@
 8. Verify that the login page is displayed again.
 9. Close the browser.
 
-Tags: smoke, Employee
+Tags: regression, Employee
