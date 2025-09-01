@@ -26,14 +26,12 @@ variables:
   displayName: 'MCP Automation Tests'
 
 stages:
-  - stage: TestExecution
-    displayName: 'Complete Test Pipeline'
+  - stage: Setup
+    displayName: 'Setup and Validation'
     jobs:
-      - job: AllTests
-        displayName: 'Setup and Execute All Tests'
-        timeoutInMinutes: 90
+      - job: Dependencies
+        displayName: 'Install Dependencies'
         steps:
-          # One-time setup for entire pipeline
           - task: NodeTool@0
             inputs:
               versionSpec: '$(nodeVersion)'
@@ -42,15 +40,31 @@ stages:
           - script: |
               npm ci
               npx playwright install --with-deps
-            displayName: 'Install dependencies and browsers (one-time)'
+            displayName: 'Install npm dependencies and Playwright browsers'
 
-          # Validation
           - script: |
               npm run validate
             displayName: 'Validate framework configuration'
             continueOnError: true
 
-          # Smoke Tests
+  - stage: SmokeTests
+    displayName: 'Smoke Tests'
+    dependsOn: Setup
+    condition: succeeded()
+    jobs:
+      - job: ExecuteSmokeTests
+        displayName: 'Execute Smoke Test Suite'
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '$(nodeVersion)'
+            displayName: 'Install Node.js'
+
+          - script: |
+              npm ci
+              npx playwright install --with-deps
+            displayName: 'Install dependencies'
+
           - script: |
               npm run ci:smoke
             displayName: 'Run Smoke Tests'
@@ -74,60 +88,73 @@ stages:
               publishLocation: 'Container'
             displayName: 'Publish Smoke Test HTML Report'
 
-          # Regression Tests (only on main branch)
+  - stage: FullRegression
+    displayName: 'Full Regression Suite'
+    dependsOn: SmokeTests
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: ExecuteRegressionTests
+        displayName: 'Execute Complete Regression Tests'
+        timeoutInMinutes: 90
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '$(nodeVersion)'
+            displayName: 'Install Node.js'
+
+          - script: |
+              npm ci
+              npx playwright install --with-deps
+            displayName: 'Install dependencies'
+
+          # Individual test suites for better tracking
           - script: |
               npm run ci:login
             displayName: 'Run Login Tests'
-            condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
             env:
               CI: true
 
           - script: |
               npm run ci:pim
             displayName: 'Run PIM Module Tests'
-            condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
             env:
               CI: true
 
           - script: |
               npm run ci:buzz
             displayName: 'Run Buzz Social Tests'
-            condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
             env:
               CI: true
 
           - script: |
               npm run ci:employee
             displayName: 'Run Employee Management Tests'
-            condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
             env:
               CI: true
 
-          # Full Regression Suite (only on main branch)
+          # Complete regression suite
           - script: |
               npm run ci:regression
-            displayName: 'Run Full Regression Suite'
-            condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+            displayName: 'Run Complete Regression Suite'
             env:
               CI: true
 
-          # Publish all test results
           - task: PublishTestResults@2
             condition: succeededOrFailed()
             inputs:
               testResultsFormat: 'JUnit'
               testResultsFiles: 'test-results/results.xml'
-              failTaskOnFailedTests: false
-              testRunTitle: 'All Test Results'
-            displayName: 'Publish All Test Results'
+              failTaskOnFailedTests: true
+              testRunTitle: 'Full Regression Tests'
+            displayName: 'Publish Regression Test Results'
 
           - task: PublishBuildArtifacts@1
             condition: succeededOrFailed()
             inputs:
               pathtoPublish: 'playwright-report'
-              artifactName: 'complete-test-report'
+              artifactName: 'regression-test-report'
               publishLocation: 'Container'
-            displayName: 'Publish Complete Test Report'
+            displayName: 'Publish Regression Test HTML Report'
 
           - task: PublishBuildArtifacts@1
             condition: succeededOrFailed()
@@ -139,7 +166,9 @@ stages:
 
   - stage: Quality_Gates
     displayName: 'Quality Gates'
-    dependsOn: TestExecution
+    dependsOn: 
+      - SmokeTests
+      - FullRegression
     condition: succeededOrFailed()
     jobs:
       - job: QualityAnalysis
