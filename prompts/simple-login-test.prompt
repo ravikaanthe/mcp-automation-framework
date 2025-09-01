@@ -1,0 +1,11 @@
+# Simple Login Test
+
+Test the basic login functionality of OrangeHRM application.
+
+Navigate to https://opensource-demo.orangehrmlive.com and verify:
+1. Login page loads correctly
+2. Valid credentials (Admin/admin123) allow successful login
+3. Dashboard appears after successful login
+4. User can logout successfully
+
+Tags: smoke, login, P1

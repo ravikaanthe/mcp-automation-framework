@@ -1,0 +1,94 @@
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+playwright-report/
+
+# Test Results and Reports
+results/
+reports/
+test-output/
+html-report/
+junit-results.xml
+test-results.json
+
+# Compiled TypeScript files
+*.js
+*.js.map
+tools/dist/
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE and Editor files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Temporary files
+tmp/
+temp/
+
+# Azure DevOps
+.azure/
+
+# GitHub specific
+.github/ISSUE_TEMPLATE/
+.github/PULL_REQUEST_TEMPLATE/
+
+# Backup files
+*.bak
+*.backup
+
+# Configuration files with sensitive data (keep templates)
+# config/app-configs/*-local.json
+# config/app-configs/*-prod.json
+
+# Keep framework configuration files
+!config/app-configs/orangehrm.json
+!config/app-configs/genericweb.json
+!config/app-configs/shopify.json

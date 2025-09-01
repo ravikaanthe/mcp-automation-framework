@@ -1,0 +1,69 @@
+{
+  "patterns": [
+    {
+      "name": "navigation",
+      "triggers": ["navigate", "open", "go to", "visit"],
+      "description": "Basic navigation to application"
+    },
+    {
+      "name": "login",
+      "triggers": ["login", "username", "password", "admin", "credential", "sign in"],
+      "description": "User authentication"
+    },
+    {
+      "name": "dashboard_verification",
+      "triggers": ["dashboard", "verify", "confirm", "check"],
+      "description": "Verify dashboard elements"
+    },
+    {
+      "name": "pim_navigation",
+      "triggers": ["pim", "employee", "staff", "personnel"],
+      "description": "Navigate to PIM module"
+    },
+    {
+      "name": "add_employee",
+      "triggers": ["add", "employee", "first name", "last name", "create"],
+      "description": "Add new employee"
+    },
+    {
+      "name": "logout",
+      "triggers": ["logout", "user icon", "sign out", "exit"],
+      "description": "User logout"
+    },
+    {
+      "name": "search",
+      "triggers": ["search", "find", "look for", "filter"],
+      "description": "Search functionality"
+    },
+    {
+      "name": "delete",
+      "triggers": ["delete", "remove", "cancel"],
+      "description": "Delete operations"
+    },
+    {
+      "name": "edit",
+      "triggers": ["edit", "modify", "update", "change"],
+      "description": "Edit operations"
+    },
+    {
+      "name": "upload",
+      "triggers": ["upload", "attach", "file", "document"],
+      "description": "File upload operations"
+    }
+  ],
+  "elements": {
+    "common_buttons": {
+      "save": ["button[type='submit']", "text=Save", ".save-btn"],
+      "cancel": ["text=Cancel", ".cancel-btn", "button[type='button']"],
+      "add": ["text=Add", ".add-btn", "+"],
+      "edit": ["text=Edit", ".edit-btn", "pencil"],
+      "delete": ["text=Delete", ".delete-btn", "trash"]
+    },
+    "form_fields": {
+      "firstName": ["input[name='firstName']", "#firstName", ".first-name"],
+      "lastName": ["input[name='lastName']", "#lastName", ".last-name"],
+      "email": ["input[type='email']", "input[name='email']", "#email"],
+      "phone": ["input[type='tel']", "input[name='phone']", "#phone"]
+    }
+  }
+}

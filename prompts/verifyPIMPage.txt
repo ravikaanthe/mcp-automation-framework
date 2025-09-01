@@ -1,0 +1,12 @@
+1. Navigate to `https://opensource-demo.orangehrmlive.com`.
+2. Login to OrangeHRM with username `"Admin"` and password `"admin123"`.
+  * Wait for dashboard to be visible after login.
+3. Click on `"PIM"` in the left sidebar menu.
+4. Verify that the `"Employee Information"` page is displayed.
+5. Check that both `"Add"` and `"Search"` buttons are visible on the page.
+6. Click the 'user icon' in the top right corner.
+7. Click the `"Logout"` option.
+8. Verify that the login page is displayed again.
+9. Close the browser.
+
+Tags: smoke, Employee

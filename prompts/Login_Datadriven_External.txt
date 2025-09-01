@@ -1,0 +1,27 @@
+Generate a Playwright test in TypeScript using @playwright/test that performs data-driven testing with an external dataset.
+
+Scenario: Login validation on https://opensource-demo.orangehrmlive.com
+
+Requirements:
+1. Read test data from an external CSV file called "loginData.csv" located in the "test-data" folder.
+   The file has the following columns: Username, Password, Expected.
+   Example rows:
+      Admin, admin123, Dashboard
+      fakeuser, fakepass, Invalid credentials
+      ESSUser1, ess123, Invalid credentials
+
+2. For each row in the dataset:
+   - Navigate to the OrangeHRM login page
+   - Enter the Username and Password from the dataset
+   - Click the Login button
+   - Verify the Expected result:
+       - If Expected = "Dashboard", check that the dashboard page is visible
+       - If Expected = "Invalid credentials", check that the error message "Invalid credentials" is displayed
+
+3. Implement iteration so that all rows in the dataset are tested automatically within one test suite.
+
+4. Log pass/fail results for each dataset entry in the test output.
+
+5. Close the browser after all tests complete.
+
+Tags: smoke, login, P1

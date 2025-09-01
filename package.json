@@ -1,0 +1,134 @@
+{
+  "name": "mcp-automation-framework",
+  "version": "2.0.0",
+  "main": "agents/executor.ts",
+  "description": "AI-driven test automation framework using natural language prompts with Playwright MCP",
+  "keywords": [
+    "automation",
+    "testing",
+    "playwright",
+    "mcp",
+    "ai",
+    "natural-language",
+    "configuration-driven",
+    "cross-browser",
+    "enterprise"
+  ],
+  "homepage": "https://github.com/your-org/mcp-automation-framework#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/mcp-automation-framework.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/mcp-automation-framework/issues"
+  },
+  "license": "MIT",
+  "author": "Your Organization",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "scripts": {
+    "build": "tsc agents/executor.ts --outDir dist",
+    "executor": "ts-node agents/executor.ts",
+    "regression": "ts-node agents/executor.ts",
+    "regression:dev": "ts-node agents/executor.ts",
+    
+    "// CI/CD Optimized Scripts": "",
+    "ci:install": "npm ci && npx playwright install",
+    "ci:smoke": "ts-node agents/executor.ts --suite=smoke --browsers=chromium,firefox --parallel",
+    "ci:regression": "ts-node agents/executor.ts --suite=regression --browsers=chromium,firefox,webkit --parallel",
+    "ci:single-file": "ts-node agents/executor.ts --file=$FILE --browsers=chromium,firefox --parallel",
+    
+    "// File-Specific CI Commands": "",
+    "ci:pim": "ts-node agents/executor.ts --file=verifyPIMPage.txt --browsers=chromium,firefox,webkit --parallel",
+    "ci:login": "ts-node agents/executor.ts --file=Login_Datadriven.txt --browsers=chromium,firefox --parallel",
+    "ci:employee": "ts-node agents/executor.ts --file=addEmployeeVerification.txt --browsers=chromium,firefox --parallel",
+    "ci:buzz": "ts-node agents/executor.ts --file=VerifyBuzzPostVerification.txt --browsers=chromium,firefox --parallel",
+    
+    "// Environment-Specific CI": "",
+    "ci:prod": "ts-node agents/executor.ts --suite=smoke --browsers=chromium,firefox --env=prod --parallel",
+    "ci:staging": "ts-node agents/executor.ts --suite=regression --browsers=chromium,firefox,webkit --env=staging --parallel",
+    "smoke": "ts-node agents/executor.ts --suite=smoke --browsers=chromium,firefox --env=prod",
+    "smoke:dev": "ts-node agents/executor.ts --suite=smoke --browsers=chromium --env=dev",
+    "smoke:staging": "ts-node agents/executor.ts --suite=smoke --browsers=chromium,firefox,webkit --env=staging",
+    "smoke:cross-browser": "ts-node agents/executor.ts --suite=smoke --browsers=chromium,firefox,webkit --parallel",
+    
+    "sanity": "ts-node agents/executor.ts --suite=sanity --browsers=chromium --env=prod",
+    "sanity:quick": "ts-node agents/executor.ts --suite=sanity --browsers=chromium --timeout=60000",
+    "sanity:all-browsers": "ts-node agents/executor.ts --suite=sanity --browsers=chromium,firefox,webkit --parallel",
+    
+    "regression:full": "ts-node agents/executor.ts --suite=regression --browsers=chromium,firefox --env=staging",
+    "regression:p1": "ts-node agents/executor.ts --suite=p1 --browsers=chromium,firefox,webkit --parallel",
+    "regression:cross-browser": "ts-node agents/executor.ts --suite=regression --browsers=chromium,firefox,webkit,edge --parallel",
+    
+    "// Prompt Standards Validation": "",
+    "validate": "npx ts-node tools/prompt-validator.ts prompts/",
+    "validate:demo": "node tools/validator-demo.js",
+    "validate:enterprise": "npx ts-node tools/prompt-validator.ts",
+    "validate:file": "npx ts-node tools/prompt-validator.ts",
+    "validate:build": "tsc tools/prompt-validator.ts --outDir tools/dist --target es2020 --module commonjs",
+    "standards": "echo 'See PROMPTING_STANDARDS.md and QUICK_REFERENCE.md for enterprise guidelines'",
+    
+    "// Build Pipeline Scripts": "",
+    "test:pre-build": "npm run sanity",
+    "test:post-build": "npm run smoke",
+    "test:pre-release": "npm run regression:full",
+    "test:post-deployment": "npm run smoke && npm run sanity",
+    
+    "// Multi-Browser Testing Scripts": "",
+    "test:all-browsers": "ts-node agents/executor.ts --browsers=chromium,firefox,webkit --parallel",
+    "test:chrome-firefox": "ts-node agents/executor.ts --browsers=chromium,firefox --parallel",
+    "test:cross-browser": "ts-node agents/executor.ts --suite=smoke --browsers=chromium,firefox,webkit",
+    
+    "// Single Browser Scripts": "",
+    "test:chrome": "ts-node agents/executor.ts --browsers=chromium --headed",
+    "test:firefox": "ts-node agents/executor.ts --browsers=firefox --headed", 
+    "test:safari": "ts-node agents/executor.ts --browsers=webkit --headed",
+    "test:edge": "ts-node agents/executor.ts --browsers=edge --headed",
+    
+    "// Development Scripts": "",
+    "test:smoke": "npm run regression -- --tags=smoke",
+    "test:p1": "npm run regression -- --tags=P1",
+    "test:login": "npm run regression -- --tags=login",
+    "test:headed": "ts-node agents/executor.ts --suite=smoke --headed",
+    
+    "// Dynamic File Execution Scripts": "",
+    "run:file": "ts-node agents/executor.ts --browsers=chromium,firefox --parallel",
+    "run:file:single": "ts-node agents/executor.ts --browsers=chromium",
+    "run:file:all": "ts-node agents/executor.ts --browsers=chromium,firefox,webkit --parallel",
+    "run:file:headed": "ts-node agents/executor.ts --browsers=chromium --headed",
+    "dev": "ts-node agents/executor.ts --verbose",
+    "test:any": "ts-node agents/executor.ts --browsers=chromium --verbose",
+    
+    "// Enhanced Configuration-Driven Scripts": "",
+    "app": "ts-node cli/executor-cli.ts",
+    "app:orangehrm": "ts-node cli/executor-cli.ts --app=orangehrm",
+    "app:shopify": "ts-node cli/executor-cli.ts --app=shopify",
+    "app:generic": "ts-node cli/executor-cli.ts --app=genericweb",
+    "app:list": "ts-node cli/executor-cli.ts --list-apps",
+    "app:help": "ts-node cli/executor-cli.ts --help",
+    
+    "// Multi-App Testing": "",
+    "test:orangehrm": "ts-node cli/executor-cli.ts --app=orangehrm --suite=smoke",
+    "test:shopify": "ts-node cli/executor-cli.ts --app=shopify --suite=smoke",
+    "test:all-apps": "npm run test:orangehrm && npm run test:shopify && npm run test:generic",
+    
+    "// Utility Scripts": "",
+    "clean": "rimraf results/*.* agents/*.js agents/*.d.ts",
+    "setup": "npx playwright install",
+    "results:open": "start results/report.html",
+    "results:server": "npx http-server results -p 8080 -o"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2",
+    "@types/node": "^24.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0",
+    "rimraf": "^5.0.0"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5",
+    "csv-parser": "^3.0.0"
+  }
+}

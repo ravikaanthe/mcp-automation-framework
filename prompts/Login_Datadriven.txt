@@ -1,0 +1,14 @@
+Generate a Playwright test in TypeScript that:
+1. Opens https://opensource-demo.orangehrmlive.com
+2. Runs login tests using the following dataset:
+   - Username: Admin, Password: admin123, Expected: Dashboard visible
+   - Username: fakeuser, Password: fakepass, Expected: Error "Invalid credentials"
+   - Username: ESSUser1, Password: ess123, Expected: Error "Invalid credentials"
+3. For each test:
+   - Navigate to login page
+   - Enter credentials
+   - Verify expected result
+   - Click on 'User' icon and then click on Logout
+4. Close the browser after all tests
+
+Tags: smoke, login, P1

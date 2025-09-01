@@ -1,0 +1,46 @@
+{
+  "name": "Shopify Demo Store",
+  "version": "1.0.0",
+  "description": "Configuration for Shopify e-commerce testing",
+  "baseUrl": "https://shop.example.com",
+  "defaultCredentials": {
+    "username": "customer@example.com",
+    "password": "customer123"
+  },
+  "elements": {
+    "loginPage": {
+      "username": "email input field",
+      "password": "password input field",
+      "loginButton": "login button"
+    },
+    "shop": {
+      "searchBox": "product search box",
+      "addToCartButton": "add to cart button",
+      "cartIcon": "shopping cart icon",
+      "checkoutButton": "checkout button"
+    },
+    "account": {
+      "accountLink": "account link",
+      "logoutLink": "logout link"
+    },
+    "product": {
+      "productTitle": "product title",
+      "productPrice": "product price",
+      "productImage": "product image",
+      "quantitySelector": "quantity selector"
+    },
+    "cart": {
+      "cartItems": "cart items list",
+      "removeButton": "remove item button",
+      "updateButton": "update cart button",
+      "totalPrice": "total price display"
+    }
+  },
+  "testContext": "You are testing an e-commerce application. Focus on shopping workflows including product search, cart management, and checkout processes.",
+  "environment": {
+    "timeout": 45000,
+    "retries": 3,
+    "browsers": ["chromium", "firefox"],
+    "headless": false
+  }
+}

@@ -1,0 +1,14 @@
+Generate a Playwright test for the following scenario:
+1. Navigate to `https://opensource-demo.orangehrmlive.com`. 
+2. Login to OrangeHRM with username "Admin" & Password "admin123"
+3. Click on the "PIM" module in the left navigation
+4. Click on "Add"
+5. Enter first name as "John123" and last name as "Doe456"
+6. Click "Save"
+7. Verify that the employee profile page is displayed
+8. Confirm that "john123 doe456" is shown on the top
+9. Now click 'User' icon and click logout
+10. Close the browser
+
+
+Tags: smoke, Employee

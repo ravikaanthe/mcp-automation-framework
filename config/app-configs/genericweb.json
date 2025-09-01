@@ -1,0 +1,45 @@
+{
+  "name": "GenericWeb",
+  "version": "1.0.0",
+  "description": "Generic web application configuration template",
+  "baseUrl": "https://example.com",
+  "defaultCredentials": {
+    "username": "user",
+    "password": "password"
+  },
+  "elements": {
+    "loginPage": {
+      "username": "username input field",
+      "password": "password input field",
+      "loginButton": "login button"
+    },
+    "dashboard": {
+      "userDropdown": "user dropdown menu",
+      "logoutLink": "logout link"
+    },
+    "navigation": {
+      "homeLink": "home link",
+      "profileLink": "profile link",
+      "settingsLink": "settings link",
+      "menuToggle": "navigation menu toggle"
+    },
+    "forms": {
+      "nameInput": "name input field",
+      "emailInput": "email input field",
+      "submitButton": "submit button",
+      "cancelButton": "cancel button"
+    },
+    "common": {
+      "searchBox": "search input field",
+      "notificationBell": "notification bell",
+      "helpButton": "help button"
+    }
+  },
+  "testContext": "You are testing a generic web application. Focus on standard web interactions including login, navigation, and basic functionality verification.",
+  "environment": {
+    "timeout": 30000,
+    "retries": 2,
+    "browsers": ["chromium"],
+    "headless": false
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "name": "OrangeHRM Multi-Browser MCP Regression Suite",
+  "version": "3.0.0",
+  "description": "CI/CD-ready multi-browser regression testing suite for OrangeHRM application using MCP natural language prompts",
+  "browsers": {
+    "default": ["chromium"],
+    "development": ["chromium"],
+    "staging": ["chromium", "firefox"],
+    "production": ["chromium", "firefox", "webkit"],
+    "full": ["chromium", "firefox", "webkit", "edge"],
+    "core": ["chromium", "firefox"],
+    "mobile": ["webkit"]
+  },
+  "suites": {
+    "smoke": {
+      "description": "Critical path tests for every deployment - must pass before release",
+      "prompts": [
+        "verifyPIMPage.txt",
+        "Login_Datadriven.txt"
+      ],
+      "tags": ["smoke", "P1"],
+      "maxDuration": 300000,
+      "parallel": false,
+      "failFast": true,
+      "environment": "all",
+      "browsers": "core",
+      "browserParallel": true
+    },
+    "regression": {
+      "description": "Full regression suite covering all major features",
+      "prompts": [
+        "verifyPIMPage.txt",
+        "Login_Datadriven.txt",
+        "Login_Datadriven_External.txt",
+        "addEmployeeVerification.txt",
+        "VerifyBuzzPostVerification.txt",
+        "Selfhealing_Test.txt"
+      ],
+      "tags": ["regression", "smoke", "P1", "P2"],
+      "maxDuration": 1800000,
+      "parallel": true,
+      "failFast": false,
+      "environment": "staging,prod",
+      "browsers": "full",
+      "browserParallel": true
+    },
+    "sanity": {
+      "description": "Quick sanity checks after deployment",
+      "prompts": [
+        "verifyPIMPage.txt"
+      ],
+      "tags": ["sanity"],
+      "maxDuration": 120000,
+      "parallel": false,
+      "failFast": true,
+      "environment": "all",
+      "browsers": "default",
+      "browserParallel": false
+    },
+    "p1": {
+      "description": "Priority 1 tests - most critical business functions",
+      "prompts": [
+        "verifyPIMPage.txt",
+        "addEmployeeVerification.txt",
+        "Login_Datadriven.txt"
+      ],
+      "tags": ["P1"],
+      "maxDuration": 600000,
+      "parallel": true,
+      "failFast": false,
+      "environment": "staging,prod",
+      "browsers": "production",
+      "browserParallel": true
+    },
+    "data-driven": {
+      "description": "Tests that use external data sources",
+      "prompts": [
+        "Login_Datadriven.txt",
+        "Login_Datadriven_External.txt"
+      ],
+      "tags": ["data-driven"],
+      "maxDuration": 400000,
+      "parallel": false,
+      "failFast": false,
+      "environment": "dev,staging",
+      "browsers": "core",
+      "browserParallel": false
+    },
+    "employee": {
+      "description": "Employee management feature tests",
+      "prompts": [
+        "addEmployeeVerification.txt",
+        "verifyPIMPage.txt"
+      ],
+      "tags": ["employee"],
+      "maxDuration": 600000,
+      "parallel": true,
+      "failFast": false,
+      "environment": "all",
+      "browsers": "core",
+      "browserParallel": true
+    }
+  },
+  "environments": {
+    "dev": {
+      "baseUrl": "https://opensource-demo.orangehrmlive.com",
+      "credentials": {
+        "username": "Admin",
+        "password": "admin123"
+      },
+      "timeout": 30000,
+      "retries": 1
+    },
+    "staging": {
+      "baseUrl": "https://opensource-demo.orangehrmlive.com",
+      "credentials": {
+        "username": "Admin",
+        "password": "admin123"
+      },
+      "timeout": 45000,
+      "retries": 2
+    },
+    "prod": {
+      "baseUrl": "https://opensource-demo.orangehrmlive.com",
+      "credentials": {
+        "username": "Admin",
+        "password": "admin123"
+      },
+      "timeout": 60000,
+      "retries": 3
+    }
+  },
+  "cicd": {
+    "deploymentGates": {
+      "preBuild": ["sanity"],
+      "postBuild": ["smoke"],
+      "preRelease": ["regression"],
+      "postDeployment": ["smoke", "sanity"]
+    },
+    "notifications": {
+      "slack": {
+        "webhook": "${SLACK_WEBHOOK_URL}",
+        "channel": "#deployment-status"
+      },
+      "email": {
+        "recipients": ["${TEAM_EMAIL}"],
+        "onFailure": true,
+        "onSuccess": false
+      }
+    },
+    "reporting": {
+      "formats": ["json", "html", "junit"],
+      "outputDir": "results",
+      "archiveArtifacts": true,
+      "includeScreenshots": true,
+      "includeTimeline": true,
+      "publishResults": true
+    }
+  },
+  "settings": {
+    "parallel": false,
+    "timeout": 60000,
+    "retries": 2,
+    "screenshots": true,
+    "videos": false,
+    "tracing": true,
+    "headless": true
+  },
+  "dataFiles": {
+    "loginData": "test-data/loginData.csv",
+    "employeeData": "test-data/employeeData.xlsx"
+  }
+}

@@ -1,0 +1,18 @@
+1. Navigate to https://opensource-demo.orangehrmlive.com/
+2. Login to OrangeHRM with username "Admin" and password "admin123"
+3. Click on the "Buzz" module in the left navigation
+4. Verify that both "Buzz Newsfeed" and "Most Recent Posts" are visible
+5. Verify that the "What's on your mind?" text box is present
+6. Create a new post:
+   - Generate a unique post text using current timestamp
+   - Enter the text in the post box
+   - Click the "Post" button
+7. Verify the post appears in the feed:
+   - Wait 5 seconds for post creation
+   - Click "Most Recent Posts" to refresh the feed
+   - Wait 2 seconds for feed refresh
+   - Verify the post content appears in the first post below the "Most Recent Posts" button
+   - Use a 30-second timeout for verification to handle any delays
+8. Click "user" icon
+9. Click "Logout"
+10. Close the browser

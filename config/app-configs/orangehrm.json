@@ -1,0 +1,38 @@
+{
+  "name": "OrangeHRM",
+  "version": "1.0.0",
+  "description": "Configuration for OrangeHRM application testing",
+  "baseUrl": "https://opensource-demo.orangehrmlive.com",
+  "defaultCredentials": {
+    "username": "Admin",
+    "password": "admin123"
+  },
+  "elements": {
+    "loginPage": {
+      "username": "username input field",
+      "password": "password input field",
+      "loginButton": "login button"
+    },
+    "dashboard": {
+      "userDropdown": "user dropdown menu",
+      "logoutLink": "logout button"
+    },
+    "pim": {
+      "pimMenu": "PIM navigation link",
+      "addEmployeeTab": "add employee button",
+      "employeeList": "employee list section"
+    },
+    "buzz": {
+      "buzzMenu": "Buzz navigation link",
+      "postTextarea": "post text area",
+      "shareButton": "share button"
+    }
+  },
+  "testContext": "You are testing the OrangeHRM application, a comprehensive HR management system. The application includes modules for PIM (Personnel Information Management), Leave Management, Time Tracking, and Buzz (social feed). Focus on core HR workflows and user management features.",
+  "environment": {
+    "timeout": 30000,
+    "retries": 2,
+    "browsers": ["chromium"],
+    "headless": false
+  }
+}
