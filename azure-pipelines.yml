@@ -6,8 +6,14 @@ trigger:
     include:
       - main
       - develop
-  paths:
-    exclude:
+            - task: PublishTestResults@2
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'test-results/results.xml'
+              failTaskOnFailedTests: true
+              testRunTitle: 'Full Regression Suite'
+            displayName: 'Publish Full Regression Results'    exclude:
       - docs/*
       - README.md
       - LICENSE
@@ -83,17 +89,18 @@ stages:
             condition: succeededOrFailed()
             inputs:
               testResultsFormat: 'JUnit'
-              testResultsFiles: 'results/junit-results.xml'
+              testResultsFiles: 'test-results/results.xml'
               failTaskOnFailedTests: true
               testRunTitle: 'Smoke Tests'
             displayName: 'Publish Smoke Test Results'
 
-          - task: PublishHtmlReport@1
+          - task: PublishBuildArtifacts@1
             condition: succeededOrFailed()
             inputs:
-              reportDir: 'results/html-report'
-              tabName: 'Smoke Test Report'
-            displayName: 'Publish HTML Report'
+              pathtoPublish: 'playwright-report'
+              artifactName: 'smoke-test-report'
+              publishLocation: 'Container'
+            displayName: 'Publish Smoke Test HTML Report'
 
   - stage: Test_Regression
     displayName: 'Regression Tests'
@@ -137,7 +144,7 @@ stages:
             condition: succeededOrFailed()
             inputs:
               testResultsFormat: 'JUnit'
-              testResultsFiles: 'results/junit-results.xml'
+              testResultsFiles: 'test-results/results.xml'
               failTaskOnFailedTests: false
               testRunTitle: '$(testName)'
             displayName: 'Publish $(testName) Results'
@@ -176,17 +183,18 @@ stages:
               testRunTitle: 'Full Regression Suite'
             displayName: 'Publish Full Regression Results'
 
-          - task: PublishHtmlReport@1
+          - task: PublishBuildArtifacts@1
             condition: succeededOrFailed()
             inputs:
-              reportDir: 'results/html-report'
-              tabName: 'Full Regression Report'
+              pathtoPublish: 'playwright-report'
+              artifactName: 'full-regression-report'
+              publishLocation: 'Container'
             displayName: 'Publish Full Regression HTML Report'
 
           - task: PublishBuildArtifacts@1
             condition: succeededOrFailed()
             inputs:
-              pathtoPublish: 'results'
+              pathtoPublish: 'test-results'
               artifactName: 'test-results'
               publishLocation: 'Container'
             displayName: 'Publish Test Artifacts'
