@@ -282,46 +282,70 @@ stages:
 
           # NEW: HTML Report Extension - Viewable HTML Reports in Azure DevOps UI
           - script: |
-              echo "🔍 Final validation before HTML Report Extension..."
+              echo "🔍 Enhanced validation and preparation for HTML Report Extension..."
+              
+              # Initialize extension readiness
+              echo "##vso[task.setvariable variable=HtmlExtensionReady]false"
               
               if [ -d "$(Agent.TempDirectory)/html-reports" ]; then
                 echo "✅ HTML reports directory exists"
                 echo "📋 Directory contents:"
-                find "$(Agent.TempDirectory)/html-reports" -type f -name "*.html" || echo "❌ No HTML files found"
+                ls -la "$(Agent.TempDirectory)/html-reports" || echo "❌ Directory listing failed"
                 
-                # Count HTML files
-                HTML_COUNT=$(find "$(Agent.TempDirectory)/html-reports" -type f -name "*.html" | wc -l)
-                echo "📊 Total HTML files: $HTML_COUNT"
-                
-                # Ensure there's an index.html file for the extension
-                if [ "$HTML_COUNT" -gt 0 ] && [ ! -f "$(Agent.TempDirectory)/html-reports/index.html" ]; then
-                  echo "🔧 Creating index.html for extension compatibility..."
-                  FIRST_HTML=$(find "$(Agent.TempDirectory)/html-reports" -name "*.html" | head -1)
-                  if [ -n "$FIRST_HTML" ]; then
-                    cp "$FIRST_HTML" "$(Agent.TempDirectory)/html-reports/index.html"
-                    echo "✅ Created index.html from: $(basename $FIRST_HTML)"
-                  fi
-                fi
+                # Count all files and specifically HTML files
+                TOTAL_FILES=$(find "$(Agent.TempDirectory)/html-reports" -type f 2>/dev/null | wc -l)
+                HTML_COUNT=$(find "$(Agent.TempDirectory)/html-reports" -type f -name "*.html" 2>/dev/null | wc -l)
+                echo "📊 Total files: $TOTAL_FILES, HTML files: $HTML_COUNT"
                 
                 if [ "$HTML_COUNT" -gt 0 ]; then
-                  echo "✅ HTML files found - proceeding with extension"
-                  echo "##vso[task.setvariable variable=HtmlExtensionReady]true"
+                  echo "✅ Found $HTML_COUNT HTML files"
+                  
+                  # Always ensure index.html exists for the extension
+                  if [ ! -f "$(Agent.TempDirectory)/html-reports/index.html" ]; then
+                    echo "🔧 Creating index.html for extension compatibility..."
+                    FIRST_HTML=$(find "$(Agent.TempDirectory)/html-reports" -name "*.html" | head -1)
+                    if [ -n "$FIRST_HTML" ] && [ -f "$FIRST_HTML" ]; then
+                      cp "$FIRST_HTML" "$(Agent.TempDirectory)/html-reports/index.html"
+                      echo "✅ Created index.html from: $(basename $FIRST_HTML)"
+                    else
+                      echo "🔧 Creating minimal index.html..."
+                      echo '<!DOCTYPE html><html><head><title>MCP Test Reports</title></head><body><h1>MCP Test Reports</h1><p>Reports generated successfully. Check artifacts for detailed results.</p></body></html>' > "$(Agent.TempDirectory)/html-reports/index.html"
+                      echo "✅ Created minimal index.html"
+                    fi
+                  else
+                    echo "✅ index.html already exists"
+                  fi
+                  
+                  # Verify index.html was created successfully
+                  if [ -f "$(Agent.TempDirectory)/html-reports/index.html" ]; then
+                    INDEX_SIZE=$(wc -c < "$(Agent.TempDirectory)/html-reports/index.html")
+                    echo "✅ index.html verified (size: $INDEX_SIZE bytes)"
+                    echo "📋 Final directory structure:"
+                    ls -la "$(Agent.TempDirectory)/html-reports"
+                    echo "##vso[task.setvariable variable=HtmlExtensionReady]true"
+                    echo "##vso[task.setvariable variable=HtmlReportDir]$(Agent.TempDirectory)/html-reports"
+                  else
+                    echo "❌ Failed to create index.html"
+                    echo "##vso[task.setvariable variable=HtmlExtensionReady]false"
+                  fi
                 else
-                  echo "❌ No HTML files found - skipping extension"
+                  echo "❌ No HTML files found in directory"
                   echo "##vso[task.setvariable variable=HtmlExtensionReady]false"
                 fi
               else
                 echo "❌ HTML reports directory does not exist"
                 echo "##vso[task.setvariable variable=HtmlExtensionReady]false"
               fi
-            displayName: 'Validate HTML Files for Extension'
+              
+              echo "🏁 Extension readiness: $(echo $HtmlExtensionReady)"
+            displayName: 'Validate and Prepare HTML Files for Extension'
             condition: succeededOrFailed()
             continueOnError: true
 
           - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
             condition: and(succeededOrFailed(), eq(variables['HtmlExtensionReady'], 'true'))
             inputs:
-              reportDir: '$(Agent.TempDirectory)/html-reports'
+              reportDir: '$(HtmlReportDir)'
               tabName: 'MCP Smoke Test Reports'
               keepReports: 30
             displayName: 'Publish Viewable HTML Reports (Azure DevOps UI)'
@@ -601,46 +625,70 @@ stages:
 
           # NEW: HTML Report Extension - Viewable Regression Reports in Azure DevOps UI
           - script: |
-              echo "🔍 Final validation before Regression HTML Report Extension..."
+              echo "🔍 Enhanced validation and preparation for Regression HTML Report Extension..."
+              
+              # Initialize extension readiness
+              echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]false"
               
               if [ -d "$(Agent.TempDirectory)/regression-html-reports" ]; then
                 echo "✅ Regression HTML reports directory exists"
                 echo "📋 Directory contents:"
-                find "$(Agent.TempDirectory)/regression-html-reports" -type f -name "*.html" || echo "❌ No HTML files found"
+                ls -la "$(Agent.TempDirectory)/regression-html-reports" || echo "❌ Directory listing failed"
                 
-                # Count HTML files
-                HTML_COUNT=$(find "$(Agent.TempDirectory)/regression-html-reports" -type f -name "*.html" | wc -l)
-                echo "📊 Total HTML files: $HTML_COUNT"
-                
-                # Ensure there's an index.html file for the extension
-                if [ "$HTML_COUNT" -gt 0 ] && [ ! -f "$(Agent.TempDirectory)/regression-html-reports/index.html" ]; then
-                  echo "🔧 Creating index.html for extension compatibility..."
-                  FIRST_HTML=$(find "$(Agent.TempDirectory)/regression-html-reports" -name "*.html" | head -1)
-                  if [ -n "$FIRST_HTML" ]; then
-                    cp "$FIRST_HTML" "$(Agent.TempDirectory)/regression-html-reports/index.html"
-                    echo "✅ Created index.html from: $(basename $FIRST_HTML)"
-                  fi
-                fi
+                # Count all files and specifically HTML files
+                TOTAL_FILES=$(find "$(Agent.TempDirectory)/regression-html-reports" -type f 2>/dev/null | wc -l)
+                HTML_COUNT=$(find "$(Agent.TempDirectory)/regression-html-reports" -type f -name "*.html" 2>/dev/null | wc -l)
+                echo "📊 Total files: $TOTAL_FILES, HTML files: $HTML_COUNT"
                 
                 if [ "$HTML_COUNT" -gt 0 ]; then
-                  echo "✅ HTML files found - proceeding with extension"
-                  echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]true"
+                  echo "✅ Found $HTML_COUNT HTML files"
+                  
+                  # Always ensure index.html exists for the extension
+                  if [ ! -f "$(Agent.TempDirectory)/regression-html-reports/index.html" ]; then
+                    echo "🔧 Creating index.html for extension compatibility..."
+                    FIRST_HTML=$(find "$(Agent.TempDirectory)/regression-html-reports" -name "*.html" | head -1)
+                    if [ -n "$FIRST_HTML" ] && [ -f "$FIRST_HTML" ]; then
+                      cp "$FIRST_HTML" "$(Agent.TempDirectory)/regression-html-reports/index.html"
+                      echo "✅ Created index.html from: $(basename $FIRST_HTML)"
+                    else
+                      echo "🔧 Creating minimal index.html..."
+                      echo '<!DOCTYPE html><html><head><title>MCP Regression Test Reports</title></head><body><h1>MCP Regression Test Reports</h1><p>Reports generated successfully. Check artifacts for detailed results.</p></body></html>' > "$(Agent.TempDirectory)/regression-html-reports/index.html"
+                      echo "✅ Created minimal index.html"
+                    fi
+                  else
+                    echo "✅ index.html already exists"
+                  fi
+                  
+                  # Verify index.html was created successfully
+                  if [ -f "$(Agent.TempDirectory)/regression-html-reports/index.html" ]; then
+                    INDEX_SIZE=$(wc -c < "$(Agent.TempDirectory)/regression-html-reports/index.html")
+                    echo "✅ index.html verified (size: $INDEX_SIZE bytes)"
+                    echo "📋 Final directory structure:"
+                    ls -la "$(Agent.TempDirectory)/regression-html-reports"
+                    echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]true"
+                    echo "##vso[task.setvariable variable=RegressionHtmlReportDir]$(Agent.TempDirectory)/regression-html-reports"
+                  else
+                    echo "❌ Failed to create index.html"
+                    echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]false"
+                  fi
                 else
-                  echo "❌ No HTML files found - skipping extension"
+                  echo "❌ No HTML files found in directory"
                   echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]false"
                 fi
               else
                 echo "❌ Regression HTML reports directory does not exist"
                 echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]false"
               fi
-            displayName: 'Validate Regression HTML Files for Extension'
+              
+              echo "🏁 Regression extension readiness: $(echo $RegressionHtmlExtensionReady)"
+            displayName: 'Validate and Prepare Regression HTML Files for Extension'
             condition: succeededOrFailed()
             continueOnError: true
 
           - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
             condition: and(succeededOrFailed(), eq(variables['RegressionHtmlExtensionReady'], 'true'))
             inputs:
-              reportDir: '$(Agent.TempDirectory)/regression-html-reports'
+              reportDir: '$(RegressionHtmlReportDir)'
               tabName: 'MCP Regression Test Reports'
               keepReports: 30
             displayName: 'Publish Viewable Regression HTML Reports (Azure DevOps UI)'
