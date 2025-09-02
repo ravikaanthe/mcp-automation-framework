@@ -281,7 +281,7 @@ stages:
             continueOnError: true
 
           # NEW: HTML Report Extension - Viewable HTML Reports in Azure DevOps UI
-          - task: PublishHtmlReport@1
+          - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
             condition: and(succeededOrFailed(), eq(variables['HtmlReportsReady'], 'true'))
             inputs:
               reportDir: '$(Agent.TempDirectory)/html-reports'
@@ -563,7 +563,7 @@ stages:
             continueOnError: true
 
           # NEW: HTML Report Extension - Viewable Regression Reports in Azure DevOps UI
-          - task: PublishHtmlReport@1
+          - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
             condition: and(succeededOrFailed(), eq(variables['RegressionHtmlReportsExist'], 'true'))
             inputs:
               reportDir: '$(Agent.TempDirectory)/regression-html-reports'
