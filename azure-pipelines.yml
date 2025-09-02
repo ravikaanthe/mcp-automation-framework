@@ -43,7 +43,14 @@ stages:
             displayName: 'Install npm dependencies and Playwright browsers'
 
           - script: |
-              npm run validate
+              # Check if validation tool exists
+              if [ -f "tools/prompt-validator.ts" ]; then
+                echo "✅ Validation tool found - running validation"
+                npm run validate
+              else
+                echo "⚠️ Validation tool not found - skipping validation"
+                echo "Framework will proceed without prompt validation"
+              fi
             displayName: 'Validate framework configuration'
             continueOnError: true
 
@@ -136,15 +143,18 @@ stages:
           - script: |
               echo "🔧 Preparing HTML reports for publishing..."
               
-              # Check if HTML files exist
+              # Always create the temp directory
+              mkdir -p "$(Agent.TempDirectory)/html-reports"
+              echo "📁 Created temp directory: $(Agent.TempDirectory)/html-reports"
+              
+              # Check if HTML files exist in results
               if [ -f "results/smoke-test-report.html" ]; then
                 echo "✅ Found smoke test HTML report"
                 
-                # Method 1: Copy to a known location for publishing
-                mkdir -p "$(Agent.TempDirectory)/html-reports"
+                # Copy to temp location for publishing
                 cp results/*.html "$(Agent.TempDirectory)/html-reports/" 2>/dev/null || true
                 
-                # Method 2: Create an index.html if multiple reports exist
+                # Create an index.html if multiple reports exist
                 if [ $(find results/ -name "*.html" | wc -l) -gt 1 ]; then
                   echo "📋 Creating index.html for multiple reports..."
                   cat > "$(Agent.TempDirectory)/html-reports/index.html" << 'INDEXEOF'
@@ -182,71 +192,84 @@ stages:
                 echo "📁 Reports prepared in: $(Agent.TempDirectory)/html-reports"
                 ls -la "$(Agent.TempDirectory)/html-reports"
               else
-                echo "⚠️ No HTML reports found to publish"
+                echo "⚠️ No HTML reports found in results directory"
+                
+                # Create a placeholder HTML file so the directory isn't empty
+                cat > "$(Agent.TempDirectory)/html-reports/no-reports.html" << 'NOEOF'
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <title>No Reports Generated</title>
+                  <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; }
+                  </style>
+                </head>
+                <body>
+                  <div class="warning">
+                    <h2>⚠️ No Test Reports Generated</h2>
+                    <p>The MCP framework did not generate any HTML reports during this execution.</p>
+                    <p>Check the pipeline logs for detailed test execution information.</p>
+                  </div>
+                </body>
+                </html>
+                NOEOF
+                echo "📝 Created placeholder report file"
               fi
+              
+              echo "📋 Final temp directory contents:"
+              ls -la "$(Agent.TempDirectory)/html-reports"
             displayName: 'Prepare HTML Reports for Publishing'
             condition: succeededOrFailed()
             continueOnError: true
 
-          # Method 1: Publish as build artifacts (always works)
-          - task: PublishBuildArtifacts@1
-            condition: succeededOrFailed()
-            inputs:
-              pathtoPublish: 'results'
-              artifactName: 'smoke-test-html-reports'
-              publishLocation: 'Container'
-            displayName: 'Publish Smoke Test HTML Reports as Artifacts'
-            continueOnError: true
-
-          # Alternative: Upload HTML reports for easy access and viewing
+          # Consolidated Artifact Publishing - Optimized for HTML Reports
           - script: |
-              echo "📤 Uploading HTML reports for easy access..."
+              echo "� Finalizing artifacts for publication..."
               
-              # Create a summary page for better navigation
-              if [ -d "$(Agent.TempDirectory)/html-reports" ]; then
-                echo "✅ HTML reports directory exists"
+              # Ensure temp directory exists and is populated
+              if [ -d "$(Agent.TempDirectory)/html-reports" ] && [ "$(ls -A $(Agent.TempDirectory)/html-reports)" ]; then
+                echo "✅ HTML reports directory exists and contains files"
+                echo "📋 Contents of HTML reports directory:"
                 ls -la "$(Agent.TempDirectory)/html-reports"
-                
-                # Create summary file for pipeline
-                echo "## 📊 Smoke Test HTML Reports" > "$(Agent.TempDirectory)/html-reports/SUMMARY.md"
-                echo "" >> "$(Agent.TempDirectory)/html-reports/SUMMARY.md"
-                echo "Generated HTML reports from MCP smoke test execution:" >> "$(Agent.TempDirectory)/html-reports/SUMMARY.md"
-                echo "" >> "$(Agent.TempDirectory)/html-reports/SUMMARY.md"
-                
-                for htmlfile in "$(Agent.TempDirectory)/html-reports"/*.html; do
-                  if [ -f "$htmlfile" ]; then
-                    filename=$(basename "$htmlfile")
-                    echo "- [$filename](./$filename)" >> "$(Agent.TempDirectory)/html-reports/SUMMARY.md"
-                  fi
-                done
-                
-                echo "" >> "$(Agent.TempDirectory)/html-reports/SUMMARY.md"
-                echo "_Download the artifacts to view HTML reports in your browser._" >> "$(Agent.TempDirectory)/html-reports/SUMMARY.md"
+                echo "##vso[task.setvariable variable=HtmlReportsReady]true"
               else
-                echo "⚠️ No HTML reports directory found"
+                echo "⚠️ HTML reports directory is empty or missing"
+                echo "##vso[task.setvariable variable=HtmlReportsReady]false"
               fi
-            displayName: 'Prepare HTML Reports Summary'
+              
+              # Also ensure raw results exist
+              if [ -d "results" ] && [ "$(ls -A results)" ]; then
+                echo "✅ Results directory exists and contains files"
+                echo "📋 Contents of results directory:"
+                ls -la results/
+                echo "##vso[task.setvariable variable=RawResultsReady]true"
+              else
+                echo "⚠️ Results directory is empty or missing"
+                echo "##vso[task.setvariable variable=RawResultsReady]false"
+              fi
+            displayName: 'Validate Artifacts Before Publishing'
             condition: succeededOrFailed()
             continueOnError: true
 
-          # Upload HTML reports as artifacts - This always works reliably
+          # Primary: Viewable HTML Reports (processed for easy viewing)
           - task: PublishBuildArtifacts@1
-            condition: succeededOrFailed()
+            condition: and(succeededOrFailed(), eq(variables['HtmlReportsReady'], 'true'))
             inputs:
               pathtoPublish: '$(Agent.TempDirectory)/html-reports'
-              artifactName: 'smoke-test-viewable-html-reports'
+              artifactName: 'smoke-test-html-reports'
               publishLocation: 'Container'
-            displayName: 'Upload Smoke Test HTML Reports for Viewing'
+            displayName: 'Publish Viewable HTML Reports'
             continueOnError: true
 
-          # Original artifacts publishing for MCP reports (includes logs and other files)
+          # Secondary: Raw Results (includes logs, data files, raw HTML)
           - task: PublishBuildArtifacts@1
-            condition: succeededOrFailed()
+            condition: and(succeededOrFailed(), eq(variables['RawResultsReady'], 'true'))
             inputs:
               pathtoPublish: 'results'
-              artifactName: 'smoke-test-mcp-logs'
+              artifactName: 'smoke-test-raw-results'
               publishLocation: 'Container'
-            displayName: 'Publish Smoke Test MCP Logs and Reports'
+            displayName: 'Publish Raw Test Results and Logs'
             continueOnError: true
 
   - stage: FullRegression
@@ -365,15 +388,18 @@ stages:
           - script: |
               echo "🔧 Preparing regression HTML reports for publishing..."
               
-              # Check if HTML files exist
+              # Always create the temp directory
+              mkdir -p "$(Agent.TempDirectory)/regression-html-reports"
+              echo "📁 Created temp directory: $(Agent.TempDirectory)/regression-html-reports"
+              
+              # Check if HTML files exist in results
               if [ -f "results/regression-test-report.html" ]; then
                 echo "✅ Found regression test HTML report"
                 
-                # Method 1: Copy to a known location for publishing
-                mkdir -p "$(Agent.TempDirectory)/regression-html-reports"
+                # Copy to temp location for publishing
                 cp results/*.html "$(Agent.TempDirectory)/regression-html-reports/" 2>/dev/null || true
                 
-                # Method 2: Create an index.html if multiple reports exist
+                # Create an index.html if multiple reports exist
                 if [ $(find results/ -name "*.html" | wc -l) -gt 1 ]; then
                   echo "📋 Creating index.html for multiple regression reports..."
                   cat > "$(Agent.TempDirectory)/regression-html-reports/index.html" << 'INDEXEOF'
@@ -411,8 +437,33 @@ stages:
                 echo "📁 Regression reports prepared in: $(Agent.TempDirectory)/regression-html-reports"
                 ls -la "$(Agent.TempDirectory)/regression-html-reports"
               else
-                echo "⚠️ No regression HTML reports found to publish"
+                echo "⚠️ No regression HTML reports found in results directory"
+                
+                # Create a placeholder HTML file so the directory isn't empty
+                cat > "$(Agent.TempDirectory)/regression-html-reports/no-reports.html" << 'NOEOF'
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <title>No Regression Reports Generated</title>
+                  <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; }
+                  </style>
+                </head>
+                <body>
+                  <div class="warning">
+                    <h2>⚠️ No Regression Test Reports Generated</h2>
+                    <p>The MCP framework did not generate any HTML reports during regression test execution.</p>
+                    <p>Check the pipeline logs for detailed test execution information.</p>
+                  </div>
+                </body>
+                </html>
+                NOEOF
+                echo "📝 Created placeholder regression report file"
               fi
+              
+              echo "📋 Final regression temp directory contents:"
+              ls -la "$(Agent.TempDirectory)/regression-html-reports"
             displayName: 'Prepare Regression HTML Reports for Publishing'
             condition: succeededOrFailed()
             continueOnError: true
@@ -459,8 +510,21 @@ stages:
             continueOnError: true
 
           # Upload HTML reports as artifacts - This always works reliably
-          - task: PublishBuildArtifacts@1
+          - script: |
+              if [ -d "$(Agent.TempDirectory)/regression-html-reports" ]; then
+                echo "✅ Regression HTML reports directory exists - ready to publish"
+                ls -la "$(Agent.TempDirectory)/regression-html-reports"
+                echo "##vso[task.setvariable variable=RegressionHtmlReportsExist]true"
+              else
+                echo "⚠️ Regression HTML reports directory does not exist - skipping upload"
+                echo "##vso[task.setvariable variable=RegressionHtmlReportsExist]false"
+              fi
+            displayName: 'Validate Regression HTML Reports Directory'
             condition: succeededOrFailed()
+            continueOnError: true
+
+          - task: PublishBuildArtifacts@1
+            condition: and(succeededOrFailed(), eq(variables['RegressionHtmlReportsExist'], 'true'))
             inputs:
               pathtoPublish: '$(Agent.TempDirectory)/regression-html-reports'
               artifactName: 'regression-test-viewable-html-reports'
