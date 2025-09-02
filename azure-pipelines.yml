@@ -2,10 +2,11 @@
 # Trigger on main branch and pull requests
 #
 # REQUIREMENTS:
-# - Install "HTML Report" extension from Azure DevOps Marketplace
+# - Install "HTML Report" extension from Azure DevOps Marketplace (CURRENTLY DISABLED)
 # - Extension URL: https://marketplace.visualstudio.com/items?itemName=LakshayKaushik.PublishHTMLReports
-# - This enables HTML reports to be viewable directly in Azure DevOps UI
-# - Reports will appear as tabs: "MCP Smoke Test Reports" and "MCP Regression Test Reports"
+# - NOTE: HTML Report Extension is currently commented out due to "undefined" path errors
+# - HTML reports are available as build artifacts instead
+# - Reports can be downloaded from: Artifacts -> smoke-test-results & regression-test-results
 
 trigger:
   branches:
@@ -286,66 +287,68 @@ stages:
             displayName: 'Publish Test Results and Reports'
             continueOnError: true
 
-          # HTML Report Extension - Enhanced approach with proper file handling
-          - script: |
-              echo "🔍 Preparing HTML Report Extension with enhanced file handling..."
-              
-              # Use absolute path for extension directory in workspace
-              EXTENSION_DIR="$(Agent.WorkFolder)/smoke-html-reports"
-              mkdir -p "$EXTENSION_DIR"
-              echo "📁 Extension directory: $EXTENSION_DIR"
-              
-              # Copy HTML files to extension directory with verification
-              if [ -d "results" ]; then
-                echo "📋 Available files in results directory:"
-                ls -la results/
-                
-                # Copy all HTML files
-                cp results/*.html "$EXTENSION_DIR/" 2>/dev/null || echo "⚠️ No HTML files to copy"
-                
-                # Ensure we have a main report file
-                if [ -f "results/mcp-smoke-test-report.html" ]; then
-                  cp "results/mcp-smoke-test-report.html" "$EXTENSION_DIR/index.html"
-                  echo "✅ Main smoke report copied as index.html"
-                else
-                  # Create a fallback index.html
-                  echo '<!DOCTYPE html><html><head><title>Smoke Test Results</title></head><body><h1>🚀 MCP Automation Framework - Smoke Test Results</h1><p>Test execution completed successfully.</p></body></html>' > "$EXTENSION_DIR/index.html"
-                  echo "⚠️ Created fallback index.html"
-                fi
-                
-                # Verify directory and files
-                echo "📋 Extension directory contents:"
-                ls -la "$EXTENSION_DIR"
-                
-                # Set variables with absolute paths
-                echo "##vso[task.setvariable variable=HtmlExtensionReady]true"
-                echo "##vso[task.setvariable variable=HtmlReportDir]$EXTENSION_DIR"
-                echo "##vso[task.setvariable variable=IndexFile]$EXTENSION_DIR/index.html"
-                
-                # Verify the index file exists and is readable
-                if [ -f "$EXTENSION_DIR/index.html" ] && [ -r "$EXTENSION_DIR/index.html" ]; then
-                  echo "✅ Index file verified: $(wc -c < "$EXTENSION_DIR/index.html") bytes"
-                  echo "✅ File permissions: $(ls -la "$EXTENSION_DIR/index.html")"
-                else
-                  echo "❌ Index file verification failed"
-                  echo "##vso[task.setvariable variable=HtmlExtensionReady]false"
-                fi
-              else
-                echo "❌ Results directory not found"
-                echo "##vso[task.setvariable variable=HtmlExtensionReady]false"
-              fi
-            displayName: 'Prepare HTML Reports for Extension'
-            condition: succeededOrFailed()
-            continueOnError: true
+          # HTML Report Extension - COMMENTED OUT DUE TO EXTENSION ISSUES
+          # The LakshayKaushik.PublishHTMLReports extension is causing "undefined" errors
+          # Reports are still available as build artifacts above
+          # - script: |
+          #     echo "🔍 Preparing HTML Report Extension with enhanced file handling..."
+          #     
+          #     # Use absolute path for extension directory in workspace
+          #     EXTENSION_DIR="$(Agent.WorkFolder)/smoke-html-reports"
+          #     mkdir -p "$EXTENSION_DIR"
+          #     echo "📁 Extension directory: $EXTENSION_DIR"
+          #     
+          #     # Copy HTML files to extension directory with verification
+          #     if [ -d "results" ]; then
+          #       echo "📋 Available files in results directory:"
+          #       ls -la results/
+          #       
+          #       # Copy all HTML files
+          #       cp results/*.html "$EXTENSION_DIR/" 2>/dev/null || echo "⚠️ No HTML files to copy"
+          #       
+          #       # Ensure we have a main report file
+          #       if [ -f "results/mcp-smoke-test-report.html" ]; then
+          #         cp "results/mcp-smoke-test-report.html" "$EXTENSION_DIR/index.html"
+          #         echo "✅ Main smoke report copied as index.html"
+          #       else
+          #         # Create a fallback index.html
+          #         echo '<!DOCTYPE html><html><head><title>Smoke Test Results</title></head><body><h1>🚀 MCP Automation Framework - Smoke Test Results</h1><p>Test execution completed successfully.</p></body></html>' > "$EXTENSION_DIR/index.html"
+          #         echo "⚠️ Created fallback index.html"
+          #       fi
+          #       
+          #       # Verify directory and files
+          #       echo "📋 Extension directory contents:"
+          #       ls -la "$EXTENSION_DIR"
+          #       
+          #       # Set variables with absolute paths
+          #       echo "##vso[task.setvariable variable=HtmlExtensionReady]true"
+          #       echo "##vso[task.setvariable variable=HtmlReportDir]$EXTENSION_DIR"
+          #       echo "##vso[task.setvariable variable=IndexFile]$EXTENSION_DIR/index.html"
+          #       
+          #       # Verify the index file exists and is readable
+          #       if [ -f "$EXTENSION_DIR/index.html" ] && [ -r "$EXTENSION_DIR/index.html" ]; then
+          #         echo "✅ Index file verified: $(wc -c < "$EXTENSION_DIR/index.html") bytes"
+          #         echo "✅ File permissions: $(ls -la "$EXTENSION_DIR/index.html")"
+          #       else
+          #         echo "❌ Index file verification failed"
+          #         echo "##vso[task.setvariable variable=HtmlExtensionReady]false"
+          #       fi
+          #     else
+          #       echo "❌ Results directory not found"
+          #       echo "##vso[task.setvariable variable=HtmlExtensionReady]false"
+          #     fi
+          #   displayName: 'Prepare HTML Reports for Extension'
+          #   condition: succeededOrFailed()
+          #   continueOnError: true
 
-          - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
-            condition: and(succeededOrFailed(), eq(variables['HtmlExtensionReady'], 'true'))
-            inputs:
-              reportDir: '$(HtmlReportDir)'
-              tabName: 'MCP Smoke Test Reports'
-              keepReports: 30
-            displayName: 'Publish Viewable HTML Reports (Azure DevOps UI)'
-            continueOnError: true
+          # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
+          #   condition: and(succeededOrFailed(), eq(variables['HtmlExtensionReady'], 'true'))
+          #   inputs:
+          #     reportDir: '$(HtmlReportDir)'
+          #     tabName: 'MCP Smoke Test Reports'
+          #     keepReports: 30
+          #   displayName: 'Publish Viewable HTML Reports (Azure DevOps UI)'
+          #   continueOnError: true
 
   - stage: FullRegression
     displayName: 'Full Regression Suite'
@@ -552,66 +555,68 @@ stages:
             displayName: 'Publish Regression Test Results and Reports'
             continueOnError: true
 
-          # HTML Report Extension for regression tests - Enhanced approach with proper file handling
-          - script: |
-              echo "🔍 Preparing Regression HTML Report Extension with enhanced file handling..."
-              
-              # Use absolute path for regression extension directory in workspace
-              REGRESSION_EXTENSION_DIR="$(Agent.WorkFolder)/regression-html-reports"
-              mkdir -p "$REGRESSION_EXTENSION_DIR"
-              echo "📁 Regression extension directory: $REGRESSION_EXTENSION_DIR"
-              
-              # Copy HTML files to extension directory with verification
-              if [ -d "results" ]; then
-                echo "📋 Available files in results directory:"
-                ls -la results/
-                
-                # Copy all HTML files
-                cp results/*.html "$REGRESSION_EXTENSION_DIR/" 2>/dev/null || echo "⚠️ No HTML files to copy"
-                
-                # Ensure we have a main report file
-                if [ -f "results/mcp-regression-test-report.html" ]; then
-                  cp "results/mcp-regression-test-report.html" "$REGRESSION_EXTENSION_DIR/index.html"
-                  echo "✅ Main regression report copied as index.html"
-                else
-                  # Create a fallback index.html
-                  echo '<!DOCTYPE html><html><head><title>Regression Test Results</title></head><body><h1>🔄 MCP Automation Framework - Regression Test Results</h1><p>Regression test execution completed successfully.</p></body></html>' > "$REGRESSION_EXTENSION_DIR/index.html"
-                  echo "⚠️ Created fallback index.html"
-                fi
-                
-                # Verify directory and files
-                echo "📋 Extension directory contents:"
-                ls -la "$REGRESSION_EXTENSION_DIR"
-                
-                # Set variables with absolute paths
-                echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]true"
-                echo "##vso[task.setvariable variable=RegressionHtmlReportDir]$REGRESSION_EXTENSION_DIR"
-                echo "##vso[task.setvariable variable=RegressionIndexFile]$REGRESSION_EXTENSION_DIR/index.html"
-                
-                # Verify the index file exists and is readable
-                if [ -f "$REGRESSION_EXTENSION_DIR/index.html" ] && [ -r "$REGRESSION_EXTENSION_DIR/index.html" ]; then
-                  echo "✅ Index file verified: $(wc -c < "$REGRESSION_EXTENSION_DIR/index.html") bytes"
-                  echo "✅ File permissions: $(ls -la "$REGRESSION_EXTENSION_DIR/index.html")"
-                else
-                  echo "❌ Index file verification failed"
-                  echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]false"
-                fi
-              else
-                echo "❌ Results directory not found"
-                echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]false"
-              fi
-            displayName: 'Prepare Regression HTML Reports for Extension'
-            condition: succeededOrFailed()
-            continueOnError: true
+          # HTML Report Extension for regression tests - COMMENTED OUT DUE TO EXTENSION ISSUES
+          # The LakshayKaushik.PublishHTMLReports extension is causing "undefined" errors
+          # Reports are still available as build artifacts above
+          # - script: |
+          #     echo "🔍 Preparing Regression HTML Report Extension with enhanced file handling..."
+          #     
+          #     # Use absolute path for regression extension directory in workspace
+          #     REGRESSION_EXTENSION_DIR="$(Agent.WorkFolder)/regression-html-reports"
+          #     mkdir -p "$REGRESSION_EXTENSION_DIR"
+          #     echo "📁 Regression extension directory: $REGRESSION_EXTENSION_DIR"
+          #     
+          #     # Copy HTML files to extension directory with verification
+          #     if [ -d "results" ]; then
+          #       echo "📋 Available files in results directory:"
+          #       ls -la results/
+          #       
+          #       # Copy all HTML files
+          #       cp results/*.html "$REGRESSION_EXTENSION_DIR/" 2>/dev/null || echo "⚠️ No HTML files to copy"
+          #       
+          #       # Ensure we have a main report file
+          #       if [ -f "results/mcp-regression-test-report.html" ]; then
+          #         cp "results/mcp-regression-test-report.html" "$REGRESSION_EXTENSION_DIR/index.html"
+          #         echo "✅ Main regression report copied as index.html"
+          #       else
+          #         # Create a fallback index.html
+          #         echo '<!DOCTYPE html><html><head><title>Regression Test Results</title></head><body><h1>🔄 MCP Automation Framework - Regression Test Results</h1><p>Regression test execution completed successfully.</p></body></html>' > "$REGRESSION_EXTENSION_DIR/index.html"
+          #         echo "⚠️ Created fallback index.html"
+          #       fi
+          #       
+          #       # Verify directory and files
+          #       echo "📋 Extension directory contents:"
+          #       ls -la "$REGRESSION_EXTENSION_DIR"
+          #       
+          #       # Set variables with absolute paths
+          #       echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]true"
+          #       echo "##vso[task.setvariable variable=RegressionHtmlReportDir]$REGRESSION_EXTENSION_DIR"
+          #       echo "##vso[task.setvariable variable=RegressionIndexFile]$REGRESSION_EXTENSION_DIR/index.html"
+          #       
+          #       # Verify the index file exists and is readable
+          #       if [ -f "$REGRESSION_EXTENSION_DIR/index.html" ] && [ -r "$REGRESSION_EXTENSION_DIR/index.html" ]; then
+          #         echo "✅ Index file verified: $(wc -c < "$REGRESSION_EXTENSION_DIR/index.html") bytes"
+          #         echo "✅ File permissions: $(ls -la "$REGRESSION_EXTENSION_DIR/index.html")"
+          #       else
+          #         echo "❌ Index file verification failed"
+          #         echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]false"
+          #       fi
+          #     else
+          #       echo "❌ Results directory not found"
+          #       echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]false"
+          #     fi
+          #   displayName: 'Prepare Regression HTML Reports for Extension'
+          #   condition: succeededOrFailed()
+          #   continueOnError: true
 
-          - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
-            condition: and(succeededOrFailed(), eq(variables['RegressionHtmlExtensionReady'], 'true'))
-            inputs:
-              reportDir: '$(RegressionHtmlReportDir)'
-              tabName: 'MCP Regression Test Reports'
-              keepReports: 30
-            displayName: 'Publish Viewable Regression HTML Reports (Azure DevOps UI)'
-            continueOnError: true
+          # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
+          #   condition: and(succeededOrFailed(), eq(variables['RegressionHtmlExtensionReady'], 'true'))
+          #   inputs:
+          #     reportDir: '$(RegressionHtmlReportDir)'
+          #     tabName: 'MCP Regression Test Reports'
+          #     keepReports: 30
+          #   displayName: 'Publish Viewable Regression HTML Reports (Azure DevOps UI)'
+          #   continueOnError: true
 
   - stage: Quality_Gates
     displayName: 'Quality Gates'
