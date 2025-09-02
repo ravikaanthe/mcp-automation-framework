@@ -1,5 +1,11 @@
 # Azure DevOps Pipeline for MCP Automation Framework
 # Trigger on main branch and pull requests
+#
+# REQUIREMENTS:
+# - Install "HTML Report" extension from Azure DevOps Marketplace
+# - Extension URL: https://marketplace.visualstudio.com/items?itemName=LakshayKaushik.PublishHTMLReports
+# - This enables HTML reports to be viewable directly in Azure DevOps UI
+# - Reports will appear as tabs: "MCP Smoke Test Reports" and "MCP Regression Test Reports"
 
 trigger:
   branches:
@@ -274,6 +280,16 @@ stages:
             displayName: 'Publish Raw Test Results and Logs'
             continueOnError: true
 
+          # NEW: HTML Report Extension - Viewable HTML Reports in Azure DevOps UI
+          - task: PublishHtmlReport@1
+            condition: and(succeededOrFailed(), eq(variables['HtmlReportsReady'], 'true'))
+            inputs:
+              reportDir: '$(Agent.TempDirectory)/html-reports'
+              tabName: 'MCP Smoke Test Reports'
+              keepReports: '30'
+            displayName: 'Publish Viewable HTML Reports (Azure DevOps UI)'
+            continueOnError: true
+
   - stage: FullRegression
     displayName: 'Full Regression Suite'
     dependsOn: SmokeTests
@@ -544,6 +560,16 @@ stages:
               artifactName: 'regression-test-mcp-logs'
               publishLocation: 'Container'
             displayName: 'Publish Regression Test MCP Logs and Reports'
+            continueOnError: true
+
+          # NEW: HTML Report Extension - Viewable Regression Reports in Azure DevOps UI
+          - task: PublishHtmlReport@1
+            condition: and(succeededOrFailed(), eq(variables['RegressionHtmlReportsExist'], 'true'))
+            inputs:
+              reportDir: '$(Agent.TempDirectory)/regression-html-reports'
+              tabName: 'MCP Regression Test Reports'
+              keepReports: '30'
+            displayName: 'Publish Viewable Regression HTML Reports (Azure DevOps UI)'
             continueOnError: true
 
   - stage: Quality_Gates
