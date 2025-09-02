@@ -93,33 +93,21 @@ stages:
               
               if [ ! -f "results/*.html" ] && [ $(find results/ -name "*.html" 2>/dev/null | wc -l) -eq 0 ]; then
                 echo "🔧 Creating fallback HTML report..."
-                cat > results/smoke-test-report.html << 'EOF'
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Smoke Test Results</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .header { background: #f0f8ff; padding: 15px; border-radius: 5px; }
-    .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
-    .info { background: #e7f3ff; border-left: 4px solid #2196F3; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>🚀 MCP Automation Framework - Smoke Test Results</h1>
-    <p><strong>Framework:</strong> AI-driven Natural Language Test Execution</p>
-    <p><strong>Execution Time:</strong> $(date)</p>
-  </div>
-  <div class="status info">
-    <h3>📊 Test Execution Status</h3>
-    <p>Smoke tests executed using MCP natural language processing.</p>
-    <p>Detailed logs available in Azure DevOps pipeline output.</p>
-    <p><strong>Note:</strong> This is a fallback report. Check pipeline logs for detailed execution results.</p>
-  </div>
-</body>
-</html>
-EOF
+                echo '<!DOCTYPE html>' > results/smoke-test-report.html
+                echo '<html><head><title>Smoke Test Results</title>' >> results/smoke-test-report.html
+                echo '<style>body { font-family: Arial, sans-serif; margin: 20px; }' >> results/smoke-test-report.html
+                echo '.header { background: #f0f8ff; padding: 15px; border-radius: 5px; }' >> results/smoke-test-report.html
+                echo '.status { padding: 10px; margin: 10px 0; border-radius: 5px; }' >> results/smoke-test-report.html
+                echo '.info { background: #e7f3ff; border-left: 4px solid #2196F3; }</style></head>' >> results/smoke-test-report.html
+                echo '<body><div class="header">' >> results/smoke-test-report.html
+                echo '<h1>🚀 MCP Automation Framework - Smoke Test Results</h1>' >> results/smoke-test-report.html
+                echo '<p><strong>Framework:</strong> AI-driven Natural Language Test Execution</p>' >> results/smoke-test-report.html
+                echo "<p><strong>Execution Time:</strong> $(date)</p></div>" >> results/smoke-test-report.html
+                echo '<div class="status info"><h3>📊 Test Execution Status</h3>' >> results/smoke-test-report.html
+                echo '<p>Smoke tests executed using MCP natural language processing.</p>' >> results/smoke-test-report.html
+                echo '<p>Detailed logs available in Azure DevOps pipeline output.</p>' >> results/smoke-test-report.html
+                echo '<p><strong>Note:</strong> This is a fallback report. Check pipeline logs for detailed execution results.</p>' >> results/smoke-test-report.html
+                echo '</div></body></html>' >> results/smoke-test-report.html
                 echo "✅ Fallback HTML report created"
               fi
               
@@ -157,26 +145,16 @@ EOF
                 # Create an index.html if multiple reports exist
                 if [ $(find results/ -name "*.html" | wc -l) -gt 1 ]; then
                   echo "📋 Creating index.html for multiple reports..."
-                  cat > "$(Agent.TempDirectory)/html-reports/index.html" << 'INDEXEOF'
-<!DOCTYPE html>
-<html>
-<head>
-  <title>MCP Test Reports</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .header { background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-    .report-link { display: block; padding: 10px; margin: 5px 0; background: #f9f9f9; border-radius: 3px; text-decoration: none; color: #333; }
-    .report-link:hover { background: #e9e9e9; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>🚀 MCP Automation Framework - Test Reports</h1>
-    <p>Generated reports from automated test execution</p>
-  </div>
-  <div>
-    <h2>Available Reports:</h2>
-INDEXEOF
+                  echo '<!DOCTYPE html>' > "$(Agent.TempDirectory)/html-reports/index.html"
+                  echo '<html><head><title>MCP Test Reports</title>' >> "$(Agent.TempDirectory)/html-reports/index.html"
+                  echo '<style>body { font-family: Arial, sans-serif; margin: 20px; }' >> "$(Agent.TempDirectory)/html-reports/index.html"
+                  echo '.header { background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; }' >> "$(Agent.TempDirectory)/html-reports/index.html"
+                  echo '.report-link { display: block; padding: 10px; margin: 5px 0; background: #f9f9f9; border-radius: 3px; text-decoration: none; color: #333; }' >> "$(Agent.TempDirectory)/html-reports/index.html"
+                  echo '.report-link:hover { background: #e9e9e9; }</style></head>' >> "$(Agent.TempDirectory)/html-reports/index.html"
+                  echo '<body><div class="header">' >> "$(Agent.TempDirectory)/html-reports/index.html"
+                  echo '<h1>🚀 MCP Automation Framework - Test Reports</h1>' >> "$(Agent.TempDirectory)/html-reports/index.html"
+                  echo '<p>Generated reports from automated test execution</p></div>' >> "$(Agent.TempDirectory)/html-reports/index.html"
+                  echo '<div><h2>Available Reports:</h2>' >> "$(Agent.TempDirectory)/html-reports/index.html"
                   
                   # Add links to all HTML files
                   for htmlfile in results/*.html; do
@@ -195,25 +173,15 @@ INDEXEOF
                 echo "⚠️ No HTML reports found in results directory"
                 
                 # Create a placeholder HTML file so the directory isn't empty
-                cat > "$(Agent.TempDirectory)/html-reports/no-reports.html" << 'NOEOF'
-<!DOCTYPE html>
-<html>
-<head>
-  <title>No Reports Generated</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; }
-  </style>
-</head>
-<body>
-  <div class="warning">
-    <h2>⚠️ No Test Reports Generated</h2>
-    <p>The MCP framework did not generate any HTML reports during this execution.</p>
-    <p>Check the pipeline logs for detailed test execution information.</p>
-  </div>
-</body>
-</html>
-NOEOF
+                echo '<!DOCTYPE html>' > "$(Agent.TempDirectory)/html-reports/no-reports.html"
+                echo '<html><head><title>No Reports Generated</title>' >> "$(Agent.TempDirectory)/html-reports/no-reports.html"
+                echo '<style>body { font-family: Arial, sans-serif; margin: 20px; }' >> "$(Agent.TempDirectory)/html-reports/no-reports.html"
+                echo '.warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; }</style></head>' >> "$(Agent.TempDirectory)/html-reports/no-reports.html"
+                echo '<body><div class="warning">' >> "$(Agent.TempDirectory)/html-reports/no-reports.html"
+                echo '<h2>⚠️ No Test Reports Generated</h2>' >> "$(Agent.TempDirectory)/html-reports/no-reports.html"
+                echo '<p>The MCP framework did not generate any HTML reports during this execution.</p>' >> "$(Agent.TempDirectory)/html-reports/no-reports.html"
+                echo '<p>Check the pipeline logs for detailed test execution information.</p>' >> "$(Agent.TempDirectory)/html-reports/no-reports.html"
+                echo '</div></body></html>' >> "$(Agent.TempDirectory)/html-reports/no-reports.html"
                 echo "📝 Created placeholder report file"
               fi
               
@@ -338,33 +306,21 @@ NOEOF
               
               if [ $(find results/ -name "*.html" 2>/dev/null | wc -l) -eq 0 ]; then
                 echo "🔧 Creating fallback regression HTML report..."
-                cat > results/regression-test-report.html << 'EOF'
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Regression Test Results</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .header { background: #f0f8ff; padding: 15px; border-radius: 5px; }
-    .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
-    .info { background: #e7f3ff; border-left: 4px solid #2196F3; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>🔄 MCP Automation Framework - Regression Test Results</h1>
-    <p><strong>Framework:</strong> AI-driven Natural Language Test Execution</p>
-    <p><strong>Execution Time:</strong> $(date)</p>
-  </div>
-  <div class="status info">
-    <h3>📊 Test Execution Status</h3>
-    <p>Full regression suite executed using MCP natural language processing.</p>
-    <p>Detailed logs available in Azure DevOps pipeline output.</p>
-    <p><strong>Note:</strong> This is a fallback report. Check pipeline logs for detailed execution results.</p>
-  </div>
-</body>
-</html>
-EOF
+                echo '<!DOCTYPE html>' > results/regression-test-report.html
+                echo '<html><head><title>Regression Test Results</title>' >> results/regression-test-report.html
+                echo '<style>body { font-family: Arial, sans-serif; margin: 20px; }' >> results/regression-test-report.html
+                echo '.header { background: #f0f8ff; padding: 15px; border-radius: 5px; }' >> results/regression-test-report.html
+                echo '.status { padding: 10px; margin: 10px 0; border-radius: 5px; }' >> results/regression-test-report.html
+                echo '.info { background: #e7f3ff; border-left: 4px solid #2196F3; }</style></head>' >> results/regression-test-report.html
+                echo '<body><div class="header">' >> results/regression-test-report.html
+                echo '<h1>🔄 MCP Automation Framework - Regression Test Results</h1>' >> results/regression-test-report.html
+                echo '<p><strong>Framework:</strong> AI-driven Natural Language Test Execution</p>' >> results/regression-test-report.html
+                echo "<p><strong>Execution Time:</strong> $(date)</p></div>" >> results/regression-test-report.html
+                echo '<div class="status info"><h3>📊 Test Execution Status</h3>' >> results/regression-test-report.html
+                echo '<p>Full regression suite executed using MCP natural language processing.</p>' >> results/regression-test-report.html
+                echo '<p>Detailed logs available in Azure DevOps pipeline output.</p>' >> results/regression-test-report.html
+                echo '<p><strong>Note:</strong> This is a fallback report. Check pipeline logs for detailed execution results.</p>' >> results/regression-test-report.html
+                echo '</div></body></html>' >> results/regression-test-report.html
                 echo "✅ Fallback regression HTML report created"
               fi
               
@@ -402,26 +358,16 @@ EOF
                 # Create an index.html if multiple reports exist
                 if [ $(find results/ -name "*.html" | wc -l) -gt 1 ]; then
                   echo "📋 Creating index.html for multiple regression reports..."
-                  cat > "$(Agent.TempDirectory)/regression-html-reports/index.html" << 'INDEXEOF'
-<!DOCTYPE html>
-<html>
-<head>
-  <title>MCP Regression Test Reports</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .header { background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-    .report-link { display: block; padding: 10px; margin: 5px 0; background: #f9f9f9; border-radius: 3px; text-decoration: none; color: #333; }
-    .report-link:hover { background: #e9e9e9; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>🔄 MCP Automation Framework - Regression Test Reports</h1>
-    <p>Generated reports from regression test execution</p>
-  </div>
-  <div>
-    <h2>Available Reports:</h2>
-INDEXEOF
+                  echo '<!DOCTYPE html>' > "$(Agent.TempDirectory)/regression-html-reports/index.html"
+                  echo '<html><head><title>MCP Regression Test Reports</title>' >> "$(Agent.TempDirectory)/regression-html-reports/index.html"
+                  echo '<style>body { font-family: Arial, sans-serif; margin: 20px; }' >> "$(Agent.TempDirectory)/regression-html-reports/index.html"
+                  echo '.header { background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; }' >> "$(Agent.TempDirectory)/regression-html-reports/index.html"
+                  echo '.report-link { display: block; padding: 10px; margin: 5px 0; background: #f9f9f9; border-radius: 3px; text-decoration: none; color: #333; }' >> "$(Agent.TempDirectory)/regression-html-reports/index.html"
+                  echo '.report-link:hover { background: #e9e9e9; }</style></head>' >> "$(Agent.TempDirectory)/regression-html-reports/index.html"
+                  echo '<body><div class="header">' >> "$(Agent.TempDirectory)/regression-html-reports/index.html"
+                  echo '<h1>🔄 MCP Automation Framework - Regression Test Reports</h1>' >> "$(Agent.TempDirectory)/regression-html-reports/index.html"
+                  echo '<p>Generated reports from regression test execution</p></div>' >> "$(Agent.TempDirectory)/regression-html-reports/index.html"
+                  echo '<div><h2>Available Reports:</h2>' >> "$(Agent.TempDirectory)/regression-html-reports/index.html"
                   
                   # Add links to all HTML files
                   for htmlfile in results/*.html; do
@@ -440,25 +386,15 @@ INDEXEOF
                 echo "⚠️ No regression HTML reports found in results directory"
                 
                 # Create a placeholder HTML file so the directory isn't empty
-                cat > "$(Agent.TempDirectory)/regression-html-reports/no-reports.html" << 'NOEOF'
-<!DOCTYPE html>
-<html>
-<head>
-  <title>No Regression Reports Generated</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; }
-  </style>
-</head>
-<body>
-  <div class="warning">
-    <h2>⚠️ No Regression Test Reports Generated</h2>
-    <p>The MCP framework did not generate any HTML reports during regression test execution.</p>
-    <p>Check the pipeline logs for detailed test execution information.</p>
-  </div>
-</body>
-</html>
-NOEOF
+                echo '<!DOCTYPE html>' > "$(Agent.TempDirectory)/regression-html-reports/no-reports.html"
+                echo '<html><head><title>No Regression Reports Generated</title>' >> "$(Agent.TempDirectory)/regression-html-reports/no-reports.html"
+                echo '<style>body { font-family: Arial, sans-serif; margin: 20px; }' >> "$(Agent.TempDirectory)/regression-html-reports/no-reports.html"
+                echo '.warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; }</style></head>' >> "$(Agent.TempDirectory)/regression-html-reports/no-reports.html"
+                echo '<body><div class="warning">' >> "$(Agent.TempDirectory)/regression-html-reports/no-reports.html"
+                echo '<h2>⚠️ No Regression Test Reports Generated</h2>' >> "$(Agent.TempDirectory)/regression-html-reports/no-reports.html"
+                echo '<p>The MCP framework did not generate any HTML reports during regression test execution.</p>' >> "$(Agent.TempDirectory)/regression-html-reports/no-reports.html"
+                echo '<p>Check the pipeline logs for detailed test execution information.</p>' >> "$(Agent.TempDirectory)/regression-html-reports/no-reports.html"
+                echo '</div></body></html>' >> "$(Agent.TempDirectory)/regression-html-reports/no-reports.html"
                 echo "📝 Created placeholder regression report file"
               fi
               
