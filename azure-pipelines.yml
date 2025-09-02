@@ -293,6 +293,16 @@ stages:
                 HTML_COUNT=$(find "$(Agent.TempDirectory)/html-reports" -type f -name "*.html" | wc -l)
                 echo "📊 Total HTML files: $HTML_COUNT"
                 
+                # Ensure there's an index.html file for the extension
+                if [ "$HTML_COUNT" -gt 0 ] && [ ! -f "$(Agent.TempDirectory)/html-reports/index.html" ]; then
+                  echo "🔧 Creating index.html for extension compatibility..."
+                  FIRST_HTML=$(find "$(Agent.TempDirectory)/html-reports" -name "*.html" | head -1)
+                  if [ -n "$FIRST_HTML" ]; then
+                    cp "$FIRST_HTML" "$(Agent.TempDirectory)/html-reports/index.html"
+                    echo "✅ Created index.html from: $(basename $FIRST_HTML)"
+                  fi
+                fi
+                
                 if [ "$HTML_COUNT" -gt 0 ]; then
                   echo "✅ HTML files found - proceeding with extension"
                   echo "##vso[task.setvariable variable=HtmlExtensionReady]true"
@@ -314,7 +324,6 @@ stages:
               reportDir: '$(Agent.TempDirectory)/html-reports'
               tabName: 'MCP Smoke Test Reports'
               keepReports: 30
-              reportFiles: '**/*.html'
             displayName: 'Publish Viewable HTML Reports (Azure DevOps UI)'
             continueOnError: true
 
@@ -603,6 +612,16 @@ stages:
                 HTML_COUNT=$(find "$(Agent.TempDirectory)/regression-html-reports" -type f -name "*.html" | wc -l)
                 echo "📊 Total HTML files: $HTML_COUNT"
                 
+                # Ensure there's an index.html file for the extension
+                if [ "$HTML_COUNT" -gt 0 ] && [ ! -f "$(Agent.TempDirectory)/regression-html-reports/index.html" ]; then
+                  echo "🔧 Creating index.html for extension compatibility..."
+                  FIRST_HTML=$(find "$(Agent.TempDirectory)/regression-html-reports" -name "*.html" | head -1)
+                  if [ -n "$FIRST_HTML" ]; then
+                    cp "$FIRST_HTML" "$(Agent.TempDirectory)/regression-html-reports/index.html"
+                    echo "✅ Created index.html from: $(basename $FIRST_HTML)"
+                  fi
+                fi
+                
                 if [ "$HTML_COUNT" -gt 0 ]; then
                   echo "✅ HTML files found - proceeding with extension"
                   echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]true"
@@ -624,7 +643,6 @@ stages:
               reportDir: '$(Agent.TempDirectory)/regression-html-reports'
               tabName: 'MCP Regression Test Reports'
               keepReports: 30
-              reportFiles: '**/*.html'
             displayName: 'Publish Viewable Regression HTML Reports (Azure DevOps UI)'
             continueOnError: true
 
