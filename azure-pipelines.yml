@@ -281,12 +281,40 @@ stages:
             continueOnError: true
 
           # NEW: HTML Report Extension - Viewable HTML Reports in Azure DevOps UI
+          - script: |
+              echo "🔍 Final validation before HTML Report Extension..."
+              
+              if [ -d "$(Agent.TempDirectory)/html-reports" ]; then
+                echo "✅ HTML reports directory exists"
+                echo "📋 Directory contents:"
+                find "$(Agent.TempDirectory)/html-reports" -type f -name "*.html" || echo "❌ No HTML files found"
+                
+                # Count HTML files
+                HTML_COUNT=$(find "$(Agent.TempDirectory)/html-reports" -type f -name "*.html" | wc -l)
+                echo "📊 Total HTML files: $HTML_COUNT"
+                
+                if [ "$HTML_COUNT" -gt 0 ]; then
+                  echo "✅ HTML files found - proceeding with extension"
+                  echo "##vso[task.setvariable variable=HtmlExtensionReady]true"
+                else
+                  echo "❌ No HTML files found - skipping extension"
+                  echo "##vso[task.setvariable variable=HtmlExtensionReady]false"
+                fi
+              else
+                echo "❌ HTML reports directory does not exist"
+                echo "##vso[task.setvariable variable=HtmlExtensionReady]false"
+              fi
+            displayName: 'Validate HTML Files for Extension'
+            condition: succeededOrFailed()
+            continueOnError: true
+
           - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
-            condition: and(succeededOrFailed(), eq(variables['HtmlReportsReady'], 'true'))
+            condition: and(succeededOrFailed(), eq(variables['HtmlExtensionReady'], 'true'))
             inputs:
               reportDir: '$(Agent.TempDirectory)/html-reports'
               tabName: 'MCP Smoke Test Reports'
-              keepReports: '30'
+              keepReports: 30
+              reportFiles: '**/*.html'
             displayName: 'Publish Viewable HTML Reports (Azure DevOps UI)'
             continueOnError: true
 
@@ -563,12 +591,40 @@ stages:
             continueOnError: true
 
           # NEW: HTML Report Extension - Viewable Regression Reports in Azure DevOps UI
+          - script: |
+              echo "🔍 Final validation before Regression HTML Report Extension..."
+              
+              if [ -d "$(Agent.TempDirectory)/regression-html-reports" ]; then
+                echo "✅ Regression HTML reports directory exists"
+                echo "📋 Directory contents:"
+                find "$(Agent.TempDirectory)/regression-html-reports" -type f -name "*.html" || echo "❌ No HTML files found"
+                
+                # Count HTML files
+                HTML_COUNT=$(find "$(Agent.TempDirectory)/regression-html-reports" -type f -name "*.html" | wc -l)
+                echo "📊 Total HTML files: $HTML_COUNT"
+                
+                if [ "$HTML_COUNT" -gt 0 ]; then
+                  echo "✅ HTML files found - proceeding with extension"
+                  echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]true"
+                else
+                  echo "❌ No HTML files found - skipping extension"
+                  echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]false"
+                fi
+              else
+                echo "❌ Regression HTML reports directory does not exist"
+                echo "##vso[task.setvariable variable=RegressionHtmlExtensionReady]false"
+              fi
+            displayName: 'Validate Regression HTML Files for Extension'
+            condition: succeededOrFailed()
+            continueOnError: true
+
           - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
-            condition: and(succeededOrFailed(), eq(variables['RegressionHtmlReportsExist'], 'true'))
+            condition: and(succeededOrFailed(), eq(variables['RegressionHtmlExtensionReady'], 'true'))
             inputs:
               reportDir: '$(Agent.TempDirectory)/regression-html-reports'
               tabName: 'MCP Regression Test Reports'
-              keepReports: '30'
+              keepReports: 30
+              reportFiles: '**/*.html'
             displayName: 'Publish Viewable Regression HTML Reports (Azure DevOps UI)'
             continueOnError: true
 

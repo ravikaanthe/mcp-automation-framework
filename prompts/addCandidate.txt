@@ -1,0 +1,21 @@
+Open https://opensource-demo.orangehrmlive.com/web/index.php/auth/login
+2. Enter "Admin" into Username
+3. Enter "admin123" into Password
+4. Click on "Login"
+5. Clcik on "Recruitment" from the sidebar
+6. Click on "Add" button in the Candidates section
+7. Enter the following candidate details:
+   - First Name: John
+   - Middle Name: A
+   - Last Name: Doe
+   - Email: john.doe@example.com
+   - Contact Number: 1234567890
+   - Job Vacancy: Associate IT Manager
+8. Click "Save"
+9. Verify that a success message or confirmation is shown
+10. Verify that "John Doe" appears in the Candidates list
+11. Click "user" icon
+12. Clcik "Logout"
+13. Close browser
+
+Tags: regression, Candidate
