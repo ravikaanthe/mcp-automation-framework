@@ -30,6 +30,9 @@ pool:
 variables:
   nodeVersion: '18.x'
   displayName: 'MCP Automation Tests'
+  # Cache keys for performance optimization
+  playwrightVersion: '1.54.2'  # Update this when upgrading Playwright
+  cacheKeyPrefix: 'mcp-automation-v2'
 
 stages:
   - stage: Setup
@@ -43,10 +46,42 @@ stages:
               versionSpec: '$(nodeVersion)'
             displayName: 'Install Node.js'
 
+          # Cache Node.js dependencies
+          - task: Cache@2
+            inputs:
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              restoreKeys: |
+                npm | "$(Agent.OS)"
+              path: ~/.npm
+            displayName: 'Cache npm dependencies'
+
+          # Cache Playwright browsers
+          - task: Cache@2
+            inputs:
+              key: 'playwright | "$(Agent.OS)" | "$(playwrightVersion)"'
+              restoreKeys: |
+                playwright | "$(Agent.OS)"
+              path: ~/.cache/ms-playwright
+            displayName: 'Cache Playwright browsers'
+
           - script: |
               npm ci
-              npx playwright install --with-deps
-            displayName: 'Install npm dependencies and Playwright browsers'
+            displayName: 'Install npm dependencies'
+
+          - script: |
+              npx playwright install chromium firefox webkit
+            displayName: 'Install Playwright browsers (cached)'
+
+          - script: |
+              # Only install system dependencies if needed (Ubuntu/Linux only)
+              if command -v apt-get >/dev/null 2>&1; then
+                echo "Installing system dependencies for Ubuntu..."
+                npx playwright install-deps
+              else
+                echo "System dependencies not needed or already installed"
+              fi
+            displayName: 'Install system dependencies (if needed)'
+            continueOnError: true
 
           - script: |
               # Check if validation tool exists
@@ -73,10 +108,36 @@ stages:
               versionSpec: '$(nodeVersion)'
             displayName: 'Install Node.js'
 
+          # Reuse cached dependencies
+          - task: Cache@2
+            inputs:
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              restoreKeys: |
+                npm | "$(Agent.OS)"
+              path: ~/.npm
+            displayName: 'Restore npm cache'
+
+          - task: Cache@2
+            inputs:
+              key: 'playwright | "$(Agent.OS)" | "$(playwrightVersion)"'
+              restoreKeys: |
+                playwright | "$(Agent.OS)"
+              path: ~/.cache/ms-playwright
+            displayName: 'Restore Playwright browsers cache'
+
           - script: |
               npm ci
-              npx playwright install --with-deps
-            displayName: 'Install dependencies'
+            displayName: 'Install dependencies (cached)'
+
+          - script: |
+              # Quick check - only install if browsers are missing
+              if ! npx playwright list 2>/dev/null | grep -q "chromium"; then
+                echo "Installing missing Playwright browsers..."
+                npx playwright install chromium firefox webkit
+              else
+                echo "✅ Playwright browsers already available"
+              fi
+            displayName: 'Verify Playwright browsers'
 
           - script: |
               npm run ci:smoke
@@ -365,10 +426,36 @@ stages:
               versionSpec: '$(nodeVersion)'
             displayName: 'Install Node.js'
 
+          # Reuse cached dependencies for regression tests
+          - task: Cache@2
+            inputs:
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              restoreKeys: |
+                npm | "$(Agent.OS)"
+              path: ~/.npm
+            displayName: 'Restore npm cache'
+
+          - task: Cache@2
+            inputs:
+              key: 'playwright | "$(Agent.OS)" | "$(playwrightVersion)"'
+              restoreKeys: |
+                playwright | "$(Agent.OS)"
+              path: ~/.cache/ms-playwright
+            displayName: 'Restore Playwright browsers cache'
+
           - script: |
               npm ci
-              npx playwright install --with-deps
-            displayName: 'Install dependencies'
+            displayName: 'Install dependencies (cached)'
+
+          - script: |
+              # Quick verification - only install if browsers are missing
+              if ! npx playwright list 2>/dev/null | grep -q "chromium"; then
+                echo "Installing missing Playwright browsers..."
+                npx playwright install chromium firefox webkit
+              else
+                echo "✅ Playwright browsers already available"
+              fi
+            displayName: 'Verify Playwright browsers'
 
           # Individual test suites for better tracking
           - script: |

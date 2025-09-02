@@ -35,7 +35,8 @@
     "regression:dev": "ts-node agents/executor.ts",
     
     "// CI/CD Optimized Scripts": "",
-    "ci:install": "npm ci && npx playwright install",
+    "ci:install": "npm ci && npx playwright install chromium firefox webkit",
+    "ci:install:quick": "npm ci && npx playwright install chromium",
     "ci:smoke": "ts-node agents/executor.ts --suite=smoke --browsers=chromium,firefox --parallel",
     "ci:regression": "ts-node agents/executor.ts --suite=regression --browsers=chromium,firefox,webkit --parallel",
     "ci:single-file": "ts-node agents/executor.ts --file=$FILE --browsers=chromium,firefox --parallel",
@@ -116,7 +117,9 @@
     
     "// Utility Scripts": "",
     "clean": "rimraf results/*.* agents/*.js agents/*.d.ts",
-    "setup": "npx playwright install",
+    "setup": "npx playwright install chromium firefox webkit",
+    "setup:all": "npx playwright install",
+    "setup:deps": "npx playwright install-deps",
     "results:open": "start results/report.html",
     "results:server": "npx http-server results -p 8080 -o"
   },
