@@ -65,6 +65,15 @@ stages:
               path: $(Pipeline.Workspace)/playwright-cache
             displayName: 'Cache Playwright browsers'
 
+          # Cache system dependencies to avoid repeated installs
+          - task: Cache@2
+            inputs:
+              key: 'playwright-deps | "$(Agent.OS)" | "$(playwrightVersion)"'
+              restoreKeys: |
+                playwright-deps | "$(Agent.OS)"
+              path: $(Pipeline.Workspace)/playwright-deps-cache
+            displayName: 'Cache Playwright system dependencies'
+
           - script: |
               # Configure npm to use custom cache directory
               npm config set cache "$(Pipeline.Workspace)/npm-cache"
@@ -96,14 +105,32 @@ stages:
             continueOnError: true
 
           - script: |
-              # Only install system dependencies if needed (Ubuntu/Linux only)
+              # Smart system dependencies installation - only when actually needed
               if command -v apt-get >/dev/null 2>&1; then
-                echo "Installing system dependencies for Ubuntu..."
-                npx playwright install-deps
+                echo "🔍 Checking if system dependencies are needed..."
+                
+                # Check cache marker for system dependencies
+                DEPS_CACHE_DIR="$(Pipeline.Workspace)/playwright-deps-cache"
+                DEPS_MARKER="$DEPS_CACHE_DIR/.deps-installed"
+                
+                if [ -f "$DEPS_MARKER" ]; then
+                  echo "✅ System dependencies already cached and installed, skipping installation"
+                  echo "🚀 Using cached system dependencies for faster pipeline execution"
+                else
+                  echo "📥 Installing system dependencies (first time or cache miss)..."
+                  
+                  # Create cache directory and install dependencies
+                  mkdir -p "$DEPS_CACHE_DIR"
+                  npx playwright install-deps
+                  
+                  # Create marker file to indicate successful installation
+                  echo "$(date): Playwright system dependencies installed successfully" > "$DEPS_MARKER"
+                  echo "✅ System dependencies installed and cached for future runs"
+                fi
               else
-                echo "System dependencies not needed or already installed"
+                echo "✅ System dependencies not needed (non-Ubuntu system)"
               fi
-            displayName: 'Install system dependencies (if needed)'
+            displayName: 'Install system dependencies (smart caching)'
             continueOnError: true
 
           - script: |
