@@ -46,13 +46,13 @@ stages:
               versionSpec: '$(nodeVersion)'
             displayName: 'Install Node.js'
 
-          # Cache Node.js dependencies
+          # Cache Node.js dependencies in a controlled location
           - task: Cache@2
             inputs:
               key: 'npm | "$(Agent.OS)" | package-lock.json'
               restoreKeys: |
                 npm | "$(Agent.OS)"
-              path: $(npm_config_cache)
+              path: $(Pipeline.Workspace)/npm-cache
             displayName: 'Cache npm dependencies'
 
           # Cache Playwright browsers in a controlled location
@@ -65,8 +65,14 @@ stages:
             displayName: 'Cache Playwright browsers'
 
           - script: |
+              # Configure npm to use custom cache directory
+              npm config set cache "$(Pipeline.Workspace)/npm-cache"
+              mkdir -p "$(Pipeline.Workspace)/npm-cache"
+              echo "📦 npm cache directory: $(Pipeline.Workspace)/npm-cache"
+              
+              # Install npm dependencies with custom cache
               npm ci
-            displayName: 'Install npm dependencies'
+            displayName: 'Install npm dependencies (with caching)'
 
           - script: |
               # Set up Playwright cache directory
@@ -130,7 +136,7 @@ stages:
               key: 'npm | "$(Agent.OS)" | package-lock.json'
               restoreKeys: |
                 npm | "$(Agent.OS)"
-              path: $(npm_config_cache)
+              path: $(Pipeline.Workspace)/npm-cache
             displayName: 'Restore npm cache'
 
           - task: Cache@2
@@ -142,6 +148,11 @@ stages:
             displayName: 'Restore Playwright browsers cache'
 
           - script: |
+              # Configure npm to use cached directory for smoke tests
+              npm config set cache "$(Pipeline.Workspace)/npm-cache"
+              echo "📦 Using npm cache: $(Pipeline.Workspace)/npm-cache"
+              
+              # Install dependencies with cache
               npm ci
             displayName: 'Install dependencies (cached)'
 
@@ -457,7 +468,7 @@ stages:
               key: 'npm | "$(Agent.OS)" | package-lock.json'
               restoreKeys: |
                 npm | "$(Agent.OS)"
-              path: $(npm_config_cache)
+              path: $(Pipeline.Workspace)/npm-cache
             displayName: 'Restore npm cache'
 
           - task: Cache@2
@@ -469,6 +480,11 @@ stages:
             displayName: 'Restore Playwright browsers cache'
 
           - script: |
+              # Configure npm to use cached directory for regression tests
+              npm config set cache "$(Pipeline.Workspace)/npm-cache"
+              echo "📦 Using npm cache: $(Pipeline.Workspace)/npm-cache"
+              
+              # Install dependencies with cache
               npm ci
             displayName: 'Install dependencies (cached)'
 
