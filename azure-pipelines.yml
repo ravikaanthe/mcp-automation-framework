@@ -52,16 +52,16 @@ stages:
               key: 'npm | "$(Agent.OS)" | package-lock.json'
               restoreKeys: |
                 npm | "$(Agent.OS)"
-              path: ~/.npm
+              path: $(npm_config_cache)
             displayName: 'Cache npm dependencies'
 
-          # Cache Playwright browsers
+          # Cache Playwright browsers in a controlled location
           - task: Cache@2
             inputs:
               key: 'playwright | "$(Agent.OS)" | "$(playwrightVersion)"'
               restoreKeys: |
                 playwright | "$(Agent.OS)"
-              path: ~/.cache/ms-playwright
+              path: $(Pipeline.Workspace)/playwright-cache
             displayName: 'Cache Playwright browsers'
 
           - script: |
@@ -69,8 +69,24 @@ stages:
             displayName: 'Install npm dependencies'
 
           - script: |
+              # Set up Playwright cache directory
+              export PLAYWRIGHT_BROWSERS_PATH="$(Pipeline.Workspace)/playwright-cache"
+              mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"
+              echo "🎭 Playwright browsers will be installed to: $PLAYWRIGHT_BROWSERS_PATH"
+              
+              # Install Playwright browsers to cache location
               npx playwright install chromium firefox webkit
-            displayName: 'Install Playwright browsers (cached)'
+              
+              echo "✅ Playwright browsers installed and cached"
+              ls -la "$PLAYWRIGHT_BROWSERS_PATH" || echo "Cache directory contents will be available after installation"
+            displayName: 'Install Playwright browsers (with caching)'
+
+          - script: |
+              # Ensure Playwright cache directory exists for caching
+              mkdir -p "$(Pipeline.Workspace)/playwright-cache"
+              echo "✅ Playwright cache directory prepared for caching"
+            displayName: 'Prepare Playwright cache directory'
+            continueOnError: true
 
           - script: |
               # Only install system dependencies if needed (Ubuntu/Linux only)
@@ -114,7 +130,7 @@ stages:
               key: 'npm | "$(Agent.OS)" | package-lock.json'
               restoreKeys: |
                 npm | "$(Agent.OS)"
-              path: ~/.npm
+              path: $(npm_config_cache)
             displayName: 'Restore npm cache'
 
           - task: Cache@2
@@ -122,7 +138,7 @@ stages:
               key: 'playwright | "$(Agent.OS)" | "$(playwrightVersion)"'
               restoreKeys: |
                 playwright | "$(Agent.OS)"
-              path: ~/.cache/ms-playwright
+              path: $(Pipeline.Workspace)/playwright-cache
             displayName: 'Restore Playwright browsers cache'
 
           - script: |
@@ -130,20 +146,29 @@ stages:
             displayName: 'Install dependencies (cached)'
 
           - script: |
+              # Set Playwright to use cached browsers
+              export PLAYWRIGHT_BROWSERS_PATH="$(Pipeline.Workspace)/playwright-cache"
+              echo "🎭 Using Playwright browsers from cache: $PLAYWRIGHT_BROWSERS_PATH"
+              
               # Quick check - only install if browsers are missing
-              if ! npx playwright list 2>/dev/null | grep -q "chromium"; then
-                echo "Installing missing Playwright browsers..."
-                npx playwright install chromium firefox webkit
+              if [ -d "$PLAYWRIGHT_BROWSERS_PATH" ] && [ "$(ls -A $PLAYWRIGHT_BROWSERS_PATH 2>/dev/null)" ]; then
+                echo "✅ Using cached Playwright browsers"
+                ls -la "$PLAYWRIGHT_BROWSERS_PATH"
               else
-                echo "✅ Playwright browsers already available"
+                echo "📥 Installing missing Playwright browsers..."
+                mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"
+                npx playwright install chromium firefox webkit
               fi
-            displayName: 'Verify Playwright browsers'
+            displayName: 'Verify Playwright browsers (use cache)'
+            env:
+              PLAYWRIGHT_BROWSERS_PATH: $(Pipeline.Workspace)/playwright-cache
 
           - script: |
               npm run ci:smoke
             displayName: 'Run Smoke Tests'
             env:
               CI: true
+              PLAYWRIGHT_BROWSERS_PATH: $(Pipeline.Workspace)/playwright-cache
 
           - script: |
               echo "📁 Checking generated reports..."
@@ -432,7 +457,7 @@ stages:
               key: 'npm | "$(Agent.OS)" | package-lock.json'
               restoreKeys: |
                 npm | "$(Agent.OS)"
-              path: ~/.npm
+              path: $(npm_config_cache)
             displayName: 'Restore npm cache'
 
           - task: Cache@2
@@ -440,7 +465,7 @@ stages:
               key: 'playwright | "$(Agent.OS)" | "$(playwrightVersion)"'
               restoreKeys: |
                 playwright | "$(Agent.OS)"
-              path: ~/.cache/ms-playwright
+              path: $(Pipeline.Workspace)/playwright-cache
             displayName: 'Restore Playwright browsers cache'
 
           - script: |
@@ -448,14 +473,22 @@ stages:
             displayName: 'Install dependencies (cached)'
 
           - script: |
+              # Set Playwright to use cached browsers for regression tests
+              export PLAYWRIGHT_BROWSERS_PATH="$(Pipeline.Workspace)/playwright-cache"
+              echo "🎭 Using Playwright browsers from cache: $PLAYWRIGHT_BROWSERS_PATH"
+              
               # Quick verification - only install if browsers are missing
-              if ! npx playwright list 2>/dev/null | grep -q "chromium"; then
-                echo "Installing missing Playwright browsers..."
-                npx playwright install chromium firefox webkit
+              if [ -d "$PLAYWRIGHT_BROWSERS_PATH" ] && [ "$(ls -A $PLAYWRIGHT_BROWSERS_PATH 2>/dev/null)" ]; then
+                echo "✅ Using cached Playwright browsers"
+                ls -la "$PLAYWRIGHT_BROWSERS_PATH"
               else
-                echo "✅ Playwright browsers already available"
+                echo "📥 Installing missing Playwright browsers..."
+                mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"
+                npx playwright install chromium firefox webkit
               fi
-            displayName: 'Verify Playwright browsers'
+            displayName: 'Verify Playwright browsers (use cache)'
+            env:
+              PLAYWRIGHT_BROWSERS_PATH: $(Pipeline.Workspace)/playwright-cache
 
           # Individual test suites for better tracking
           - script: |
@@ -463,24 +496,28 @@ stages:
             displayName: 'Run Login Tests'
             env:
               CI: true
+              PLAYWRIGHT_BROWSERS_PATH: $(Pipeline.Workspace)/playwright-cache
 
           - script: |
               npm run ci:pim
             displayName: 'Run PIM Module Tests'
             env:
               CI: true
+              PLAYWRIGHT_BROWSERS_PATH: $(Pipeline.Workspace)/playwright-cache
 
           - script: |
               npm run ci:buzz
             displayName: 'Run Buzz Social Tests'
             env:
               CI: true
+              PLAYWRIGHT_BROWSERS_PATH: $(Pipeline.Workspace)/playwright-cache
 
           - script: |
               npm run ci:employee
             displayName: 'Run Employee Management Tests'
             env:
               CI: true
+              PLAYWRIGHT_BROWSERS_PATH: $(Pipeline.Workspace)/playwright-cache
 
           # Complete regression suite
           - script: |
@@ -488,6 +525,7 @@ stages:
             displayName: 'Run Complete Regression Suite'
             env:
               CI: true
+              PLAYWRIGHT_BROWSERS_PATH: $(Pipeline.Workspace)/playwright-cache
 
           - script: |
               echo "📁 Checking generated regression reports..."
