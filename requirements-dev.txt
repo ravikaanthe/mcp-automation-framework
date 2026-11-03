@@ -1,0 +1,6 @@
+# Core runtime
+playwright>=1.52.0
+
+# Optional developer tooling
+pytest>=8.0.0
+pytest-playwright>=0.4.0
